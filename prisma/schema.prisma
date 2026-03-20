@@ -1,7 +1,15 @@
 // ============================================================
 // Prisma Schema – Jordleie.no
-// Database: SQLite (zero-install, file-based)
-// Run after setup:
+// Database: PostgreSQL on Supabase
+// App host:  Railway
+//
+// Two connection strings are needed for Supabase + Prisma:
+//   DATABASE_URL  → Supabase connection pooler (used by the app)
+//   DIRECT_URL    → Supabase direct connection (used for migrations)
+//
+// First-time setup:
+//   npm install
+//   npx prisma generate
 //   npx prisma migrate dev --name init
 //   node seed.js
 // ============================================================
@@ -12,8 +20,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // ---- Farms ------------------------------------------------

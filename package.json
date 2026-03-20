@@ -7,6 +7,7 @@
     "start": "node app.js",
     "build": "prisma generate && prisma migrate deploy",
     "dev": "nodemon app.js",
+    "postinstall": "prisma generate",
     "seed": "node seed.js",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
