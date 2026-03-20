@@ -7,7 +7,8 @@
 // ============================================================
 
 require("dotenv").config();
-const Farm = require("./models/Farm");
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
 
 const sampleFarms = [
   {
@@ -192,22 +193,47 @@ const sampleFarms = [
   }
 ];
 
-function seed() {
+async function seed() {
   try {
-    console.log("🔗 Kobler til SQLite...");
+    console.log("🔗 Connecting to PostgreSQL...");
 
     // Wipe existing data
-    Farm.deleteAll();
-    console.log("🗑️  Slettet gamle data");
+    await prisma.bid.deleteMany({});
+    await prisma.farmCropType.deleteMany({});
+    await prisma.farm.deleteMany({});
+    console.log("🗑️  Deleted old data");
 
     // Insert all sample farms
-    Farm.insertMany(sampleFarms);
-    console.log(`🌱 Lagt til ${sampleFarms.length} gårder`);
+    for (const farmData of sampleFarms) {
+      const { cropTypes, ...farmInput } = farmData;
+      
+      // Convert dates and JSON fields
+      const farm = await prisma.farm.create({
+        data: {
+          ...farmInput,
+          fieldPolygon: JSON.stringify(farmInput.fieldPolygon),
+          soilComposition: JSON.stringify(farmInput.soilComposition),
+        },
+      });
 
-    console.log("✅ Ferdig! Start serveren med: node app.js");
+      // Add crop types
+      for (const cropType of cropTypes) {
+        await prisma.farmCropType.create({
+          data: {
+            farmId: farm.id,
+            cropType,
+          },
+        });
+      }
+    }
+
+    console.log(`🌱 Added ${sampleFarms.length} farms`);
+    console.log("✅ Done! Start the server with: npm run dev");
   } catch (err) {
-    console.error("❌ Feil:", err);
+    console.error("❌ Error:", err);
     process.exit(1);
+  } finally {
+    await prisma.$disconnect();
   }
 }
 

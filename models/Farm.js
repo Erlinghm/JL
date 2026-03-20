@@ -1,12 +1,13 @@
 // ============================================================
-// Farm Model – Node.js built-in SQLite (node:sqlite)
+// Farm Model – PostgreSQL via Prisma
 //
 // Provides the same public API as before so all routes work
 // unchanged:  find, findById, create, updateBid, deleteAll,
 // insertMany, toView
 // ============================================================
 
-const db = require("../prisma/db");
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
 
 // ---- Helpers ----------------------------------------------
 
@@ -40,128 +41,138 @@ function toView(row) {
 /** Attach cropTypes and bids arrays to a farm row. */
 function hydrate(row) {
   if (!row) return null;
-  const cropTypes = db
-    .prepare("SELECT cropType FROM FarmCropType WHERE farmId = ? ORDER BY id")
-    .all(row.id)
-    .map((r) => r.cropType);
-
-  const bids = db
-    .prepare("SELECT * FROM Bid WHERE farmId = ? ORDER BY createdAt DESC")
-    .all(row.id);
-
+  const cropTypes = (row.cropTypes || []).map((ct) => ct.cropType);
+  const bids = row.bids || [];
   return { ...row, _cropTypes: cropTypes, _bids: bids };
 }
 
 // ---- Query helpers ----------------------------------------
 
-function find(filter = {}, order = "auctionEnd") {
-  let sql  = "SELECT * FROM Farm";
-  const params = [];
+async function find(filter = {}, order = "auctionEnd") {
+  const where = {};
+  if (filter.fylke) where.fylke = filter.fylke;
+  if (filter.status) where.status = filter.status;
 
-  if (filter.fylke) {
-    sql += " WHERE fylke = ?";
-    params.push(filter.fylke);
-  }
-  if (filter.status) {
-    sql += filter.fylke ? " AND status = ?" : " WHERE status = ?";
-    params.push(filter.status);
-  }
+  const farms = await prisma.farm.findMany({
+    where,
+    include: {
+      cropTypes: true,
+      bids: { orderBy: { createdAt: "desc" } },
+    },
+    orderBy: { auctionEnd: "asc" },
+  });
 
-  sql += " ORDER BY auctionEnd ASC";
-
-  const rows = db.prepare(sql).all(...params);
-  return rows.map(hydrate).map(toView);
+  return farms.map(hydrate).map(toView);
 }
 
-function findById(id) {
-  const row = db.prepare("SELECT * FROM Farm WHERE id = ?").get(parseInt(id, 10));
-  return toView(hydrate(row));
+async function findById(id) {
+  const farm = await prisma.farm.findUnique({
+    where: { id: parseInt(id, 10) },
+    include: {
+      cropTypes: true,
+      bids: { orderBy: { createdAt: "desc" } },
+    },
+  });
+  return toView(hydrate(farm));
 }
 
-function create(data) {
+async function create(data) {
   const {
     cropTypes = [],
-    title, description, ownerName, ownerDescription,
-    municipality, fylke, address,
-    lat, lng, fieldPolygon,
-    sizeDekar, soilType, soilQuality, soilComposition,
-    auctionStart, auctionEnd, startingBid, currentBid,
-    rentalPeriodYears, status,
-  } = data;
-
-  const result = db.prepare(`
-    INSERT INTO Farm (
-      title, description, ownerName, ownerDescription,
-      municipality, fylke, address, lat, lng,
-      fieldPolygon, sizeDekar, soilType, soilQuality, soilComposition,
-      auctionStart, auctionEnd, startingBid, currentBid,
-      rentalPeriodYears, status
-    ) VALUES (
-      ?, ?, ?, ?,
-      ?, ?, ?, ?, ?,
-      ?, ?, ?, ?, ?,
-      ?, ?, ?, ?,
-      ?, ?
-    )
-  `).run(
     title,
     description,
     ownerName,
-    ownerDescription ?? null,
+    ownerDescription,
     municipality,
     fylke,
-    address ?? null,
-    lat ?? 60.472,
-    lng ?? 8.469,
-    typeof fieldPolygon === "string" ? fieldPolygon : JSON.stringify(fieldPolygon ?? []),
+    address,
+    lat,
+    lng,
+    fieldPolygon,
     sizeDekar,
-    soilType ?? "Leirjord",
-    soilQuality ?? "God",
-    typeof soilComposition === "string"
-      ? soilComposition
-      : JSON.stringify(soilComposition ?? { leire: 35, sand: 25, silt: 30, organisk: 10 }),
-    auctionStart instanceof Date ? auctionStart.toISOString() : (auctionStart ?? new Date().toISOString()),
-    auctionEnd instanceof Date   ? auctionEnd.toISOString()   : (auctionEnd   ?? new Date().toISOString()),
-    startingBid ?? 0,
-    currentBid  ?? 0,
-    rentalPeriodYears ?? 5,
-    status ?? "aktiv",
-  );
+    soilType,
+    soilQuality,
+    soilComposition,
+    auctionStart,
+    auctionEnd,
+    startingBid,
+    currentBid,
+    rentalPeriodYears,
+    status,
+  } = data;
 
-  const farmId = result.lastInsertRowid;
+  const farm = await prisma.farm.create({
+    data: {
+      title,
+      description,
+      ownerName,
+      ownerDescription: ownerDescription || null,
+      municipality,
+      fylke,
+      address: address || null,
+      lat: lat || 60.472,
+      lng: lng || 8.469,
+      fieldPolygon:
+        typeof fieldPolygon === "string" ? fieldPolygon : JSON.stringify(fieldPolygon || []),
+      sizeDekar,
+      soilType: soilType || "Leirjord",
+      soilQuality: soilQuality || "God",
+      soilComposition:
+        typeof soilComposition === "string"
+          ? soilComposition
+          : JSON.stringify(soilComposition || { leire: 35, sand: 25, silt: 30, organisk: 10 }),
+      auctionStart,
+      auctionEnd,
+      startingBid: startingBid || 0,
+      currentBid: currentBid || 0,
+      rentalPeriodYears: rentalPeriodYears || 5,
+      status: status || "aktiv",
+    },
+  });
 
   // Insert crop types
-  const insertCrop = db.prepare("INSERT INTO FarmCropType (farmId, cropType) VALUES (?, ?)");
   for (const ct of cropTypes) {
-    insertCrop.run(farmId, ct);
+    await prisma.farmCropType.create({
+      data: {
+        farmId: farm.id,
+        cropType: ct,
+      },
+    });
   }
 
-  return findById(farmId);
+  return findById(farm.id);
 }
 
-function updateBid(id, bidAmount, bidderName = "Anonym") {
+async function updateBid(id, bidAmount, bidderName = "Anonym") {
   const farmId = parseInt(id, 10);
 
   // Record bid in history
-  db.prepare(
-    "INSERT INTO Bid (farmId, bidderName, amount) VALUES (?, ?, ?)"
-  ).run(farmId, bidderName, bidAmount);
+  await prisma.bid.create({
+    data: {
+      farmId,
+      bidderName,
+      amount: bidAmount,
+    },
+  });
 
   // Update denormalized currentBid for fast reads
-  db.prepare(
-    "UPDATE Farm SET currentBid = ? WHERE id = ?"
-  ).run(bidAmount, farmId);
+  await prisma.farm.update({
+    where: { id: farmId },
+    data: { currentBid: bidAmount },
+  });
 
   return findById(farmId);
 }
 
-function deleteAll() {
-  db.exec("DELETE FROM FarmCropType; DELETE FROM Bid; DELETE FROM Farm;");
+async function deleteAll() {
+  await prisma.bid.deleteMany({});
+  await prisma.farmCropType.deleteMany({});
+  await prisma.farm.deleteMany({});
 }
 
-function insertMany(farms) {
+async function insertMany(farms) {
   for (const farmData of farms) {
-    create(farmData);
+    await create(farmData);
   }
 }
 

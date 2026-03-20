@@ -7,7 +7,8 @@ require("dotenv").config();
 const express = require("express");
 const methodOverride = require("method-override");
 const path = require("path");
-const prisma = require("./prisma/db");
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
