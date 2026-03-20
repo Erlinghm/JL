@@ -1,0 +1,89 @@
+// ============================================================
+// Prisma Schema – Jordleie.no
+// Database: SQLite (zero-install, file-based)
+// Run after setup:
+//   npx prisma migrate dev --name init
+//   node seed.js
+// ============================================================
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-arm64-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ---- Farms ------------------------------------------------
+// A farm listing posted by an owner. Auction info is stored
+// directly here for simplicity (no auth yet).
+model Farm {
+  id                Int      @id @default(autoincrement())
+  title             String
+  description       String
+  ownerName         String
+  ownerDescription  String?
+
+  // Location
+  municipality      String
+  fylke             String
+  address           String?
+  lat               Float    @default(60.472)
+  lng               Float    @default(8.469)
+
+  // Field polygon stored as JSON string (array of [lat, lng] pairs)
+  fieldPolygon      String   @default("[]")
+
+  // Farm details
+  sizeDekar         Float
+  soilType          String   @default("Leirjord")
+  soilQuality       String   @default("God")
+
+  // Soil composition percentages stored as JSON string
+  soilComposition   String   @default("{\"leire\":35,\"sand\":25,\"silt\":30,\"organisk\":10}")
+
+  // Auction info
+  auctionStart      DateTime
+  auctionEnd        DateTime
+  startingBid       Float
+  currentBid        Float    @default(0)
+  rentalPeriodYears Int      @default(5)
+
+  // Status: "kommende" | "aktiv" | "avsluttet"
+  status            String   @default("aktiv")
+
+  createdAt         DateTime @default(now())
+
+  // Relations
+  cropTypes         FarmCropType[]
+  bids              Bid[]
+}
+
+// ---- Crop types -------------------------------------------
+// Normalised crop type tags for each farm (replaces embedded
+// string array in MongoDB).
+model FarmCropType {
+  id       Int    @id @default(autoincrement())
+  farmId   Int
+  cropType String
+
+  farm     Farm   @relation(fields: [farmId], references: [id], onDelete: Cascade)
+
+  @@index([farmId])
+}
+
+// ---- Bids -------------------------------------------------
+// Full bid history (replaces single currentBid field in Mongo).
+model Bid {
+  id          Int      @id @default(autoincrement())
+  farmId      Int
+  bidderName  String
+  amount      Float
+  createdAt   DateTime @default(now())
+
+  farm        Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
+
+  @@index([farmId])
+}

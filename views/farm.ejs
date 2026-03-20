@@ -1,0 +1,311 @@
+<%- include('partials/head') %>
+<%- include('partials/sidebar') %>
+
+<div class="app-page">
+
+  <!-- Breadcrumb -->
+  <div class="ap-breadcrumb">
+    <div class="ap-breadcrumb-left">
+      <a href="/auksjoner">← Auksjoner</a>
+      <span class="ap-breadcrumb-sep">/</span>
+      <span style="color:var(--text-mid);"><%= farm.title %></span>
+    </div>
+    <span class="ap-farm-badge ap-badge-<%= farm.status %>">
+      <%= farm.status.charAt(0).toUpperCase() + farm.status.slice(1) %>
+    </span>
+  </div>
+
+  <!-- Two-column layout: left (details) + right (auction panel) -->
+  <div class="ap-detail-layout">
+
+    <!-- ===== LEFT COLUMN ===== -->
+    <div class="ap-detail-left">
+
+      <!-- Title & meta chips -->
+      <h1 class="ap-detail-title"><%= farm.title %></h1>
+
+      <div class="ap-detail-chips">
+        <span class="ap-chip">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          <%= farm.municipality %>, <%= farm.fylke %>
+        </span>
+        <span class="ap-chip">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+          <%= farm.sizeDekar %> dekar
+        </span>
+        <span class="ap-chip">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
+          <%= farm.soilType %>
+        </span>
+        <span class="ap-chip">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          Jordkvalitet: <%= farm.soilQuality %>
+        </span>
+      </div>
+
+      <!-- Crop tags -->
+      <% if (farm.cropTypes && farm.cropTypes.length > 0) { %>
+        <div class="ap-crop-tags" style="margin-bottom:24px;">
+          <% farm.cropTypes.forEach(crop => { %>
+            <span class="ap-crop-tag"><%= crop %></span>
+          <% }) %>
+        </div>
+      <% } %>
+
+      <!-- MAIN MAP -->
+      <div class="ap-detail-section">
+        <h2 class="ap-section-heading">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+          Kart over arealet
+        </h2>
+        <div
+          id="farm-map"
+          data-lat="<%= farm.lat %>"
+          data-lng="<%= farm.lng %>"
+          data-polygon="<%- JSON.stringify(farm.fieldPolygon) %>">
+        </div>
+        <% if (farm.address) { %>
+          <p class="ap-map-address">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+            <%= farm.address %>
+          </p>
+        <% } %>
+      </div>
+
+      <!-- Farm description -->
+      <div class="ap-detail-section">
+        <h2 class="ap-section-heading">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>
+          Beskrivelse
+        </h2>
+        <p class="ap-farm-description"><%= farm.description %></p>
+      </div>
+
+      <!-- Owner info -->
+      <div class="ap-detail-section">
+        <h2 class="ap-section-heading">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Om grunneier
+        </h2>
+        <div class="ap-owner-card">
+          <div class="ap-owner-avatar">
+            <%= farm.ownerName.split(" ").map(n => n[0]).join("").slice(0,2).toUpperCase() %>
+          </div>
+          <div>
+            <div class="ap-owner-name"><%= farm.ownerName %></div>
+            <% if (farm.ownerDescription) { %>
+              <p class="ap-owner-desc"><%= farm.ownerDescription %></p>
+            <% } %>
+          </div>
+        </div>
+      </div>
+
+      <!-- Soil composition visual -->
+      <div class="ap-detail-section">
+        <h2 class="ap-section-heading">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18h8"/><path d="M3 22h18"/><path d="M14 22a7 7 0 1 0 0-14h-1"/><path d="M9 14h2"/><path d="M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2Z"/><path d="M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3"/></svg>
+          Jordsammensetning
+        </h2>
+
+        <div class="ap-soil-bar">
+          <div class="ap-soil-segment ap-soil-leire"
+               style="flex:<%= farm.soilComposition.leire %>;"
+               title="Leire: <%= farm.soilComposition.leire %>%">
+            <%= farm.soilComposition.leire %>%
+          </div>
+          <div class="ap-soil-segment ap-soil-sand"
+               style="flex:<%= farm.soilComposition.sand %>;"
+               title="Sand: <%= farm.soilComposition.sand %>%">
+            <%= farm.soilComposition.sand %>%
+          </div>
+          <div class="ap-soil-segment ap-soil-silt"
+               style="flex:<%= farm.soilComposition.silt %>;"
+               title="Silt: <%= farm.soilComposition.silt %>%">
+            <%= farm.soilComposition.silt %>%
+          </div>
+          <div class="ap-soil-segment ap-soil-organisk"
+               style="flex:<%= farm.soilComposition.organisk %>;"
+               title="Organisk: <%= farm.soilComposition.organisk %>%">
+            <%= farm.soilComposition.organisk %>%
+          </div>
+        </div>
+
+        <div class="ap-soil-legend">
+          <span class="ap-soil-legend-item">
+            <span class="ap-soil-legend-dot" style="background:#8B6914;"></span>
+            Leire (<%= farm.soilComposition.leire %>%)
+          </span>
+          <span class="ap-soil-legend-item">
+            <span class="ap-soil-legend-dot" style="background:#D4A853;"></span>
+            Sand (<%= farm.soilComposition.sand %>%)
+          </span>
+          <span class="ap-soil-legend-item">
+            <span class="ap-soil-legend-dot" style="background:#A0522D;"></span>
+            Silt (<%= farm.soilComposition.silt %>%)
+          </span>
+          <span class="ap-soil-legend-item">
+            <span class="ap-soil-legend-dot" style="background:#4A7C1F;"></span>
+            Organisk (<%= farm.soilComposition.organisk %>%)
+          </span>
+        </div>
+
+        <div class="ap-soil-stats">
+          <div class="ap-soil-stat">
+            <div class="ap-soil-stat-label">Jordtype</div>
+            <div class="ap-soil-stat-value"><%= farm.soilType %></div>
+          </div>
+          <div class="ap-soil-stat">
+            <div class="ap-soil-stat-label">Kvalitet</div>
+            <div class="ap-soil-stat-value"><%= farm.soilQuality %></div>
+          </div>
+          <div class="ap-soil-stat">
+            <div class="ap-soil-stat-label">Areal</div>
+            <div class="ap-soil-stat-value"><%= farm.sizeDekar %> dekar</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end ap-detail-left -->
+
+    <!-- ===== RIGHT COLUMN – Auction panel ===== -->
+    <div class="ap-detail-right">
+
+      <!-- Bid panel -->
+      <div class="ap-auction-panel">
+        <div class="ap-auction-panel-label">Auksjonsstatus</div>
+
+        <!-- Current bid display -->
+        <div class="ap-bid-display">
+          <div class="ap-bid-label">
+            <% if (farm.currentBid > 0) { %>Høyeste bud<% } else { %>Startbud<% } %>
+          </div>
+          <div class="ap-bid-value">
+            <% if (farm.currentBid > 0) { %>
+              <%= farm.currentBid.toLocaleString("no-NO") %>
+            <% } else { %>
+              <%= farm.startingBid.toLocaleString("no-NO") %>
+            <% } %>
+            <span class="ap-bid-unit">kr/daa/år</span>
+          </div>
+          <% if (farm.currentBid > 0) { %>
+            <div class="ap-bid-starting">
+              Startbud: <%= farm.startingBid.toLocaleString("no-NO") %> kr/daa
+            </div>
+          <% } %>
+        </div>
+
+        <!-- Key numbers -->
+        <div class="ap-auction-detail-grid">
+          <div class="ap-auction-detail-box">
+            <div class="ap-auction-detail-label">Areal</div>
+            <div class="ap-auction-detail-value"><%= farm.sizeDekar %> daa</div>
+          </div>
+          <div class="ap-auction-detail-box">
+            <div class="ap-auction-detail-label">Leieperiode</div>
+            <div class="ap-auction-detail-value"><%= farm.rentalPeriodYears %> år</div>
+          </div>
+          <div class="ap-auction-detail-box">
+            <div class="ap-auction-detail-label">Auksjon starter</div>
+            <div class="ap-auction-detail-value"><%= new Date(farm.auctionStart).toLocaleDateString("no-NO") %></div>
+          </div>
+          <div class="ap-auction-detail-box">
+            <div class="ap-auction-detail-label">Auksjon slutter</div>
+            <div class="ap-auction-detail-value"><%= new Date(farm.auctionEnd).toLocaleDateString("no-NO") %></div>
+          </div>
+        </div>
+
+        <!-- Countdown timer -->
+        <div class="ap-countdown-label">Tid igjen</div>
+        <div class="ap-countdown" data-end-date="<%= new Date(farm.auctionEnd).toISOString() %>"></div>
+
+        <!-- Bid form -->
+        <% if (farm.status === "aktiv") { %>
+          <form action="/auksjoner/<%= farm._id %>/bid" method="POST" class="ap-bid-form">
+            <label class="ap-bid-form-label">Ditt navn</label>
+            <input
+              type="text"
+              name="bidderName"
+              class="ap-bid-input"
+              placeholder="Fornavn Etternavn"
+              required>
+            <label class="ap-bid-form-label">Ditt bud (kr per dekar per år)</label>
+            <input
+              type="number"
+              name="bidAmount"
+              class="ap-bid-input"
+              placeholder="<%= farm.currentBid > 0 ? farm.currentBid + 1 : farm.startingBid %>"
+              min="<%= farm.currentBid > 0 ? farm.currentBid + 1 : farm.startingBid %>"
+              required>
+            <p class="ap-bid-hint">
+              Budet er per dekar per år. Total kostnad per år:
+              <strong id="total-cost">–</strong>
+            </p>
+            <button type="submit" class="btn-primary" style="width:100%; justify-content:center;">
+              Legg inn bud →
+            </button>
+          </form>
+
+        <% } else if (farm.status === "kommende") { %>
+          <div class="ap-auction-state">
+            <div class="ap-auction-state-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div class="ap-auction-state-title">Auksjon starter snart</div>
+            <div class="ap-auction-state-date">
+              <%= new Date(farm.auctionStart).toLocaleDateString("no-NO") %>
+            </div>
+          </div>
+
+        <% } else { %>
+          <div class="ap-auction-state ap-auction-state-closed">
+            <div class="ap-auction-state-title">Auksjonen er avsluttet</div>
+          </div>
+        <% } %>
+      </div>
+
+      <!-- Contact panel -->
+      <div class="ap-contact-panel">
+        <div class="ap-contact-panel-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.15 13 19.79 19.79 0 0 1 1.07 4.18 2 2 0 0 1 3 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          Kontakt grunneier
+        </div>
+        <p>Har du spørsmål om arealet? Send en melding direkte til <%= farm.ownerName %> via plattformen.</p>
+        <button class="btn-outline" style="width:100%; justify-content:center;">Send melding</button>
+      </div>
+
+      <!-- Share -->
+      <button
+        class="ap-share-btn"
+        onclick="navigator.clipboard.writeText(window.location.href).then(()=>alert('Lenke kopiert!'))">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        Del denne annonsen
+      </button>
+
+    </div><!-- end ap-detail-right -->
+
+  </div><!-- end ap-detail-layout -->
+
+  <%- include('partials/footer') %>
+</div>
+
+<!-- Script: calculate total bid cost dynamically -->
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const bidInput = document.querySelector(".ap-bid-input[type='number']");
+    const totalDisplay = document.getElementById("total-cost");
+    const sizeDekar = <%= farm.sizeDekar %>;
+
+    if (bidInput && totalDisplay) {
+      function updateTotal() {
+        const bid = parseFloat(bidInput.value);
+        if (bid && bid > 0) {
+          const total = Math.round(bid * sizeDekar);
+          totalDisplay.textContent = total.toLocaleString("no-NO") + " kr/år";
+        } else {
+          totalDisplay.textContent = "–";
+        }
+      }
+      bidInput.addEventListener("input", updateTotal);
+    }
+  });
+</script>

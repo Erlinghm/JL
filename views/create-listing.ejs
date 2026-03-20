@@ -1,0 +1,223 @@
+<%- include('partials/head') %>
+<%- include('partials/sidebar') %>
+
+<main class="main-content">
+
+  <div class="page-header">
+    <h1 style="display:flex;align-items:center;gap:8px;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+      Legg ut jord
+    </h1>
+  </div>
+
+  <div class="form-page">
+    <p style="color:var(--text-mid); font-size:0.9rem; margin-bottom:24px;">
+      Fyll ut skjemaet nedenfor for å legge ut jordarealet ditt på auksjon. Tegn inn teigene dine direkte på kartet.
+    </p>
+
+    <form action="/auksjoner" method="POST">
+
+      <!-- Hidden fields populated by the map -->
+      <input type="hidden" name="lat" id="lat" value="60.472">
+      <input type="hidden" name="lng" id="lng" value="8.469">
+      <input type="hidden" name="fieldPolygon" id="fieldPolygon" value="[]">
+
+      <!-- === SECTION 1: Basic info === -->
+      <div class="form-section">
+        <div class="form-section-title" style="display:flex;align-items:center;gap:8px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Grunnleggende informasjon</div>
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label class="form-label" for="title">Annonsetittel *</label>
+            <input type="text" id="title" name="title" class="form-input"
+                   placeholder="F.eks. Flatbygd gård – Østfold korn" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="ownerName">Ditt navn *</label>
+            <input type="text" id="ownerName" name="ownerName" class="form-input"
+                   placeholder="Fornavn Etternavn" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="soilQuality">Jordkvalitet *</label>
+            <select id="soilQuality" name="soilQuality" class="form-select">
+              <option value="God">God</option>
+              <option value="Middels">Middels</option>
+              <option value="Varierende">Varierende</option>
+            </select>
+          </div>
+          <div class="form-group full-width">
+            <label class="form-label" for="description">Beskrivelse av arealet *</label>
+            <textarea id="description" name="description" class="form-textarea"
+                      rows="4" placeholder="Beskriv arealet, jordtype, historikk, tilgjengelighet..." required></textarea>
+          </div>
+          <div class="form-group full-width">
+            <label class="form-label" for="ownerDescription">Om deg som grunneier</label>
+            <textarea id="ownerDescription" name="ownerDescription" class="form-textarea"
+                      rows="2" placeholder="Fortell litt om deg selv og hva du ser etter i en leietaker..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- === SECTION 2: Location === -->
+      <div class="form-section">
+        <div class="form-section-title" style="display:flex;align-items:center;gap:8px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Beliggenhet</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="municipality">Kommune *</label>
+            <input type="text" id="municipality" name="municipality" class="form-input"
+                   placeholder="F.eks. Råde" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="fylke">Fylke *</label>
+            <select id="fylke" name="fylke" class="form-select" required>
+              <option value="">Velg fylke...</option>
+              <option>Agder</option>
+              <option>Innlandet</option>
+              <option>Møre og Romsdal</option>
+              <option>Nordland</option>
+              <option>Oslo</option>
+              <option>Rogaland</option>
+              <option>Troms og Finnmark</option>
+              <option>Trøndelag</option>
+              <option>Vestfold og Telemark</option>
+              <option>Vestland</option>
+              <option>Viken</option>
+              <option>Østfold</option>
+            </select>
+          </div>
+          <div class="form-group full-width">
+            <label class="form-label" for="address">Adresse / stedsbeskrivelse</label>
+            <input type="text" id="address" name="address" class="form-input"
+                   placeholder="Skriv inn adressen for å sentrere kartet">
+            <p style="font-size:0.75rem; color:var(--text-light); margin-top:4px;">
+              Skriv inn adressen og trykk Tab/Enter – kartet sentrerer seg automatisk.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- === SECTION 3: Draw map === -->
+      <div class="form-section">
+        <div class="form-section-title" style="display:flex;align-items:center;gap:8px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg> Tegn inn teigene dine</div>
+        <div id="draw-map"></div>
+        <p class="map-hint">
+          Bruk polygon-verktøyet (øverst til venstre på kartet) for å tegne inn gårdsarealene dine.
+          Dobbelttrykk for å avslutte. Du kan slette og tegne på nytt.
+        </p>
+      </div>
+
+      <!-- === SECTION 4: Farm details === -->
+      <div class="form-section">
+        <div class="form-section-title" style="display:flex;align-items:center;gap:8px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18"/></svg> Gårdsdetaljer</div>
+        <div class="form-grid-3">
+          <div class="form-group">
+            <label class="form-label" for="sizeDekar">Størrelse (dekar) *</label>
+            <input type="number" id="sizeDekar" name="sizeDekar" class="form-input"
+                   placeholder="F.eks. 120" min="1" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="soilType">Jordtype</label>
+            <select id="soilType" name="soilType" class="form-select">
+              <option value="Leirjord">Leirjord</option>
+              <option value="Sandjord">Sandjord</option>
+              <option value="Mellomleirjord">Mellomleirjord</option>
+              <option value="Siltig lettleire">Siltig lettleire</option>
+              <option value="Humusrik jord">Humusrik jord</option>
+              <option value="Myrjord">Myrjord</option>
+              <option value="Annet">Annet</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="rentalPeriodYears">Leieperiode (år) *</label>
+            <select id="rentalPeriodYears" name="rentalPeriodYears" class="form-select">
+              <option value="1">1 år</option>
+              <option value="3">3 år</option>
+              <option value="4">4 år</option>
+              <option value="5" selected>5 år</option>
+              <option value="6">6 år</option>
+              <option value="7">7 år</option>
+              <option value="10">10 år</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Crop types checkboxes -->
+        <div class="form-group" style="margin-top:16px;">
+          <label class="form-label">Egnet for</label>
+          <div class="checkbox-group">
+            <% ["korn", "hvete", "bygg", "havre", "raps", "potet", "grønnsaker", "bær", "frukt", "gras", "beite"].forEach(crop => { %>
+              <label class="checkbox-label">
+                <input type="checkbox" name="cropTypes" value="<%= crop %>">
+                <%= crop %>
+              </label>
+            <% }) %>
+          </div>
+        </div>
+      </div>
+
+      <!-- === SECTION 5: Auction info === -->
+      <div class="form-section">
+        <div class="form-section-title" style="display:flex;align-items:center;gap:8px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg> Auksjonsinformasjon</div>
+        <div class="form-grid-3">
+          <div class="form-group">
+            <label class="form-label" for="startingBid">Startbud (kr/daa/år) *</label>
+            <input type="number" id="startingBid" name="startingBid" class="form-input"
+                   placeholder="F.eks. 500" min="0" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="auctionStart">Auksjon starter *</label>
+            <input type="date" id="auctionStart" name="auctionStart" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="auctionEnd">Auksjon slutter *</label>
+            <input type="date" id="auctionEnd" name="auctionEnd" class="form-input" required>
+          </div>
+        </div>
+
+        <!-- Live estimate -->
+        <div style="background:var(--green-pale); border:1px solid #c1ddb8; border-radius:var(--radius); padding:14px; margin-top:16px;">
+          <div style="font-size:0.8rem; font-weight:700; color:var(--green-dark); margin-bottom:4px;">Estimert leieinntekt (startbud)</div>
+          <div id="estimate" style="font-size:1.4rem; font-weight:800; color:var(--green-dark);">–</div>
+          <div style="font-size:0.75rem; color:var(--text-light);">per år basert på startbud × areal</div>
+        </div>
+      </div>
+
+      <!-- Submit -->
+      <div style="display:flex; justify-content:flex-end; gap:12px; padding: 0 0 40px;">
+        <a href="/auksjoner" class="btn btn-outline">Avbryt</a>
+        <button type="submit" class="btn btn-primary btn-lg">Publiser annonse →</button>
+      </div>
+
+    </form>
+  </div>
+
+  <%- include('partials/footer') %>
+</main>
+
+<!-- Live estimate calculator -->
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const sizeInput = document.getElementById("sizeDekar");
+    const bidInput  = document.getElementById("startingBid");
+    const estimate  = document.getElementById("estimate");
+
+    function updateEstimate() {
+      const size = parseFloat(sizeInput.value) || 0;
+      const bid  = parseFloat(bidInput.value)  || 0;
+      if (size > 0 && bid > 0) {
+        estimate.textContent = (size * bid).toLocaleString("no-NO") + " kr/år";
+      } else {
+        estimate.textContent = "–";
+      }
+    }
+
+    sizeInput.addEventListener("input", updateEstimate);
+    bidInput.addEventListener("input", updateEstimate);
+
+    // Set default auction dates: start today, end in 3 weeks
+    const today = new Date();
+    const end   = new Date(today);
+    end.setDate(end.getDate() + 21);
+    document.getElementById("auctionStart").value = today.toISOString().slice(0,10);
+    document.getElementById("auctionEnd").value   = end.toISOString().slice(0,10);
+  });
+</script>

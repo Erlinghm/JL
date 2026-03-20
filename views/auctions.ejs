@@ -1,0 +1,151 @@
+<%- include('partials/head') %>
+<%- include('partials/sidebar') %>
+
+<div class="app-page">
+
+  <!-- Page intro -->
+  <div class="page-intro">
+    <div class="page-intro-inner">
+      <div>
+        <div class="page-intro-eyebrow">Markedsplass</div>
+        <h1>Jordleieauksjoner</h1>
+        <p class="page-intro-desc">Bud på ledige arealer i hele Norge, eller legg ut din jord for auksjon.</p>
+      </div>
+      <a href="/lag-annonse" class="btn-primary" style="white-space:nowrap; flex-shrink:0;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+        Legg ut jord
+      </a>
+    </div>
+  </div>
+
+  <!-- Marketplace stats -->
+  <div class="ap-stats">
+    <div class="ap-stats-inner">
+      <div class="ap-stat">
+        <span class="ap-stat-value"><%= totalAuctions %></span>
+        <span class="ap-stat-label">Aktive auksjoner</span>
+      </div>
+      <div class="ap-stat">
+        <span class="ap-stat-value"><%= avgDekar %></span>
+        <span class="ap-stat-label">Snitt dekar per gård</span>
+      </div>
+      <div class="ap-stat">
+        <span class="ap-stat-value"><%= avgBidPerDekar.toLocaleString("no-NO") %> kr</span>
+        <span class="ap-stat-label">Snitt startbud per dekar</span>
+      </div>
+      <div class="ap-stat">
+        <span class="ap-stat-value"><%= allFylker.length %></span>
+        <span class="ap-stat-label">Fylker</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="ap-filter">
+    <div class="ap-filter-inner">
+      <span class="ap-filter-label">Filtrer:</span>
+      <select id="fylke-filter" class="ap-filter-select">
+        <option value="alle" <%= selectedFylke === "alle" ? "selected" : "" %>>Alle fylker</option>
+        <% allFylker.forEach(f => { %>
+          <option value="<%= f %>" <%= selectedFylke === f ? "selected" : "" %>><%= f %></option>
+        <% }) %>
+      </select>
+    </div>
+  </div>
+
+  <!-- Farm cards list -->
+  <div class="ap-farms">
+    <div class="ap-farms-inner">
+      <% if (farms.length === 0) { %>
+        <div class="ap-empty-state">
+          <div class="ap-empty-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
+          </div>
+          <h3>Ingen auksjoner funnet</h3>
+          <p>Prøv å endre filteret, eller legg ut ditt eget areal.</p>
+          <a href="/lag-annonse" class="btn-primary">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+            Legg ut jord
+          </a>
+        </div>
+      <% } else { %>
+        <div class="ap-farms-grid">
+          <% farms.forEach(farm => { %>
+            <a href="/auksjoner/<%= farm._id %>" class="ap-farm-card">
+
+              <!-- Card body: text info -->
+              <div class="ap-farm-card-body">
+                <div class="ap-farm-card-top">
+                  <h2 class="ap-farm-card-title"><%= farm.title %></h2>
+                  <span class="ap-farm-badge ap-badge-<%= farm.status %>">
+                    <%= farm.status.charAt(0).toUpperCase() + farm.status.slice(1) %>
+                  </span>
+                </div>
+
+                <div class="ap-farm-card-meta">
+                  <span class="ap-meta-item">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                    <%= farm.municipality %>, <%= farm.fylke %>
+                  </span>
+                  <span class="ap-meta-item">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                    <%= farm.sizeDekar %> dekar
+                  </span>
+                  <span class="ap-meta-item">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
+                    <%= farm.soilType %>
+                  </span>
+                </div>
+
+                <p class="ap-farm-card-desc"><%= farm.description %></p>
+
+                <!-- Crop tags -->
+                <% if (farm.cropTypes && farm.cropTypes.length > 0) { %>
+                  <div class="ap-crop-tags">
+                    <% farm.cropTypes.forEach(crop => { %>
+                      <span class="ap-crop-tag"><%= crop %></span>
+                    <% }) %>
+                  </div>
+                <% } %>
+
+                <!-- Auction footer -->
+                <div class="ap-farm-card-footer">
+                  <div class="ap-auction-numbers">
+                    <div class="ap-auction-num">
+                      <span class="ap-auction-num-label">Startbud</span>
+                      <span class="ap-auction-num-value"><%= farm.startingBid.toLocaleString("no-NO") %> kr/daa</span>
+                    </div>
+                    <% if (farm.currentBid > 0) { %>
+                    <div class="ap-auction-num">
+                      <span class="ap-auction-num-label">Høyeste bud</span>
+                      <span class="ap-auction-num-value"><%= farm.currentBid.toLocaleString("no-NO") %> kr/daa</span>
+                    </div>
+                    <% } %>
+                    <div class="ap-auction-num">
+                      <span class="ap-auction-num-label">Leieperiode</span>
+                      <span class="ap-auction-num-value"><%= farm.rentalPeriodYears %> år</span>
+                    </div>
+                  </div>
+                  <span class="ap-auction-end-date">
+                    Avsluttes <%= new Date(farm.auctionEnd).toLocaleDateString("no-NO") %>
+                  </span>
+                </div>
+              </div>
+
+              <!-- Mini map on the right -->
+              <div
+                class="ap-farm-card-map"
+                data-lat="<%= farm.lat %>"
+                data-lng="<%= farm.lng %>"
+                data-polygon="<%- JSON.stringify(farm.fieldPolygon) %>">
+              </div>
+
+            </a>
+          <% }) %>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <%- include('partials/footer') %>
+</div>

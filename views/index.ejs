@@ -1,0 +1,201 @@
+<%- include('partials/head') %>
+<%- include('partials/sidebar') %>
+
+<main class="main-content home-page">
+
+  <!-- ===== HERO ===== -->
+  <section class="hero">
+    <div class="hero-content">
+      <div class="hero-eyebrow">🌾 Norges nye jordleiemarked</div>
+      <h1 class="hero-title">
+        Fremtidens<br>
+        <span>jordleie</span><br>
+        starter her.
+      </h1>
+      <p class="hero-subtitle">
+        Jordleie.no kobler grunneiere og bønder gjennom åpne, transparente auksjoner.
+        Finn ledig jord i hele Norge – eller legg ut ditt areal i dag.
+      </p>
+      <div class="hero-actions">
+        <a href="/auksjoner" class="btn-hero-primary">Se auksjoner →</a>
+        <a href="/lag-annonse" class="btn-hero-outline">Legg ut din jord</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== STATS STRIP ===== -->
+  <section style="background:#fff; border-bottom:1px solid var(--border); padding:22px 60px; display:flex; gap:40px; align-items:center; flex-wrap:wrap;">
+    <div class="stat-item">
+      <span class="stat-value">142</span>
+      <span class="stat-label">Aktive auksjoner</span>
+    </div>
+    <div class="stats-divider"></div>
+    <div class="stat-item">
+      <span class="stat-value">186</span>
+      <span class="stat-label">Snitt dekar per gård</span>
+    </div>
+    <div class="stats-divider"></div>
+    <div class="stat-item">
+      <span class="stat-value">620</span>
+      <span class="stat-label">Snitt kr per dekar</span>
+    </div>
+    <div class="stats-divider"></div>
+    <div class="stat-item">
+      <span class="stat-value">18</span>
+      <span class="stat-label">Fylker representert</span>
+    </div>
+  </section>
+
+  <!-- ===== HOW IT WORKS ===== -->
+  <section class="home-section">
+    <div class="section-label">Slik fungerer det</div>
+    <h2 class="section-title">Enkelt for alle parter</h2>
+    <p class="section-desc">
+      Jordleie.no gjør det enkelt å finne, vurdere og leie jord – eller å leie ut arealene dine til en rettferdig markedspris.
+    </p>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-number">1</div>
+        <div class="step-title">Registrer deg</div>
+        <p class="step-desc">Opprett en gratis profil som grunneier eller leietaker. Vi verifiserer identitet og gårdsbruk for trygg handel.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">2</div>
+        <div class="step-title">Finn eller legg ut</div>
+        <p class="step-desc">Søk etter ledige arealer i ditt fylke, eller publiser din jord med kart, beskrivelse og auksjonsvilkår.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">3</div>
+        <div class="step-title">Bud og avtale</div>
+        <p class="step-desc">Legg inn bud, vinn auksjonen, og inngå en digital leieavtale. Alt er transparent og trygt.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== BENEFITS ===== -->
+  <section class="home-section">
+    <div class="section-label">Fordeler</div>
+    <h2 class="section-title">Bra for grunneiere. Bra for bønder.</h2>
+    <p class="section-desc">
+      Enten du leier ut eller leier, gir Jordleie.no deg verktøyene du trenger for en god avtale.
+    </p>
+
+    <!-- Two-column: landowner vs renter -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:30px; margin-bottom:30px;">
+      <div>
+        <h3 style="font-size:1rem; font-weight:700; color:var(--green-dark); margin-bottom:16px;">🏡 For grunneiere</h3>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div class="benefit-card">
+            <div class="benefit-icon">💰</div>
+            <div>
+              <div class="benefit-title">Rettferdig markedspris</div>
+              <p class="benefit-desc">Auksjonssystemet sikrer at du alltid får markedspris for arealet ditt – ikke det naboen tilbyr.</p>
+            </div>
+          </div>
+          <div class="benefit-card">
+            <div class="benefit-icon">📜</div>
+            <div>
+              <div class="benefit-title">Digital leieavtale</div>
+              <p class="benefit-desc">Alle avtaler inngås digitalt med riktig mal. Ingen papirarbeid, ingen usikkerhet.</p>
+            </div>
+          </div>
+          <div class="benefit-card">
+            <div class="benefit-icon">🔍</div>
+            <div>
+              <div class="benefit-title">Verifiserte leietakere</div>
+              <p class="benefit-desc">Alle bud kommer fra identitetsverifiserte bønder med synlig driftshistorikk.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3 style="font-size:1rem; font-weight:700; color:var(--green-dark); margin-bottom:16px;">🚜 For leietakere</h3>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div class="benefit-card">
+            <div class="benefit-icon">🗺️</div>
+            <div>
+              <div class="benefit-title">Full oversikt</div>
+              <p class="benefit-desc">Se jordkart, jordtype, størrelse og historikk for hvert areal – alt på ett sted.</p>
+            </div>
+          </div>
+          <div class="benefit-card">
+            <div class="benefit-icon">🤝</div>
+            <div>
+              <div class="benefit-title">Transparente vilkår</div>
+              <p class="benefit-desc">Alle auksjoner viser tydelig leieperiode, startbud og gjeldende bud i sanntid.</p>
+            </div>
+          </div>
+          <div class="benefit-card">
+            <div class="benefit-icon">📍</div>
+            <div>
+              <div class="benefit-title">Finn jord nær deg</div>
+              <p class="benefit-desc">Filtrer på fylke, jordtype og størrelse. Finn arealer som passer akkurat din drift.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== TESTIMONIALS ===== -->
+  <section class="home-section" style="background:var(--beige-light);">
+    <div class="section-label">Brukere sier</div>
+    <h2 class="section-title">Erfaringer fra beta-brukere</h2>
+    <p class="section-desc">
+      Vi er i beta – men allerede har bønder over hele Norge prøvd plattformen og delt sine erfaringer.
+    </p>
+    <div class="testimonials-grid">
+      <div class="testimonial-card">
+        <div class="stars">★★★★★</div>
+        <p class="testimonial-quote">
+          Jeg fikk leid ut 200 dekar til en pris jeg aldri ville fått gjennom det gamle systemet med ringerunder. Auksjonen gikk fort og trygt.
+        </p>
+        <div class="testimonial-author">
+          <div class="author-avatar">TH</div>
+          <div>
+            <div class="author-name">Tor Helge Andresen</div>
+            <div class="author-role">Grunneier · Hedmark</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="stars">★★★★★</div>
+        <p class="testimonial-quote">
+          Endelig en plattform som faktisk forstår hva bønder trenger. Jordkartet og jordbeskrivelsen sparte meg for enormt mye tid.
+        </p>
+        <div class="testimonial-author">
+          <div class="author-avatar">ML</div>
+          <div>
+            <div class="author-name">Marte Løkken</div>
+            <div class="author-role">Leietaker · Trøndelag</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="stars">★★★★☆</div>
+        <p class="testimonial-quote">
+          Jeg var skeptisk til digitalt, men det var overraskende enkelt. La ut annonse på 10 minutter, og hadde tre bud i løpet av første dag.
+        </p>
+        <div class="testimonial-author">
+          <div class="author-avatar">KF</div>
+          <div>
+            <div class="author-name">Knut Foss</div>
+            <div class="author-role">Grunneier · Rogaland</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CTA ===== -->
+  <section class="cta-banner">
+    <h2>Klar til å komme i gang?</h2>
+    <p>Registrer deg gratis og legg ut ditt første areal – eller finn jord i ditt fylke i dag.</p>
+    <div style="display:flex; gap:14px; justify-content:center; flex-wrap:wrap;">
+      <a href="/lag-annonse" class="btn-hero-primary">Legg ut jord</a>
+      <a href="/auksjoner" class="btn-hero-outline">Finn jord til leie</a>
+    </div>
+  </section>
+
+  <%- include('partials/footer') %>
+</main>

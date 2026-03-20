@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wdth,wght@0,75..100,400..700;1,75..100,400..700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/landing.css">
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-alt);
+    }
+
+    /* ---- Login wrapper ---- */
+    .login-page {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+    }
+
+    /* Back link */
+    .login-back {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      color: var(--text-mid);
+      margin-bottom: 40px;
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .login-back:hover { color: var(--green); }
+
+    /* Card */
+    .login-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 48px 44px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+
+    /* Logo */
+    .login-logo {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--green);
+      letter-spacing: -0.03em;
+      text-decoration: none;
+      display: inline-block;
+      margin-bottom: 28px;
+    }
+
+    /* Divider under logo */
+    .login-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 0 0 28px;
+    }
+
+    .login-card h1 {
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.025em;
+      margin-bottom: 8px;
+    }
+
+    .login-card .login-sub {
+      font-size: 0.9rem;
+      color: var(--text-mid);
+      margin-bottom: 32px;
+      line-height: 1.55;
+    }
+
+    /* Form inputs */
+    .login-form {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      text-align: left;
+    }
+
+    .login-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .login-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-mid);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .login-input {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.95rem;
+      font-family: inherit;
+      color: var(--text);
+      background: var(--bg);
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .login-input:focus {
+      outline: none;
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(45,90,39,0.1);
+    }
+
+    /* Submit button */
+    .login-btn {
+      width: 100%;
+      justify-content: center;
+      margin-top: 6px;
+      padding: 13px 20px;
+      font-size: 1rem;
+    }
+
+    /* Footer note */
+    .login-footer-note {
+      margin-top: 22px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .login-footer-note a {
+      color: var(--green);
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .login-footer-note a:hover { text-decoration: underline; }
+
+    /* Trust badges */
+    .login-trust {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .login-trust-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.76rem;
+      color: var(--text-muted);
+    }
+
+    .login-trust-item svg { color: var(--green); }
+  </style>
+</head>
+<body>
+
+  <!-- Minimal top bar -->
+  <nav style="background:#fff; border-bottom:1px solid var(--border); padding:16px 32px; display:flex; align-items:center; justify-content:space-between;">
+    <a href="/" style="font-size:1.2rem; font-weight:800; color:var(--green); letter-spacing:-0.03em; text-decoration:none;">Jordleie.no</a>
+    <a href="/logg-inn" style="font-size:0.85rem; color:var(--text-mid); text-decoration:none;">Logg inn</a>
+  </nav>
+
+  <div class="login-page">
+
+    <a href="/" class="login-back">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      Tilbake til forsiden
+    </a>
+
+    <div class="login-card">
+
+      <a href="/" class="login-logo">Jordleie.no</a>
+      <div class="login-divider"></div>
+
+      <h1>Logg inn</h1>
+      <p class="login-sub">Logg inn for å se og delta i jordleieauksjoner i hele Norge.</p>
+
+      <!-- For now: straight through to the platform -->
+      <form class="login-form" action="/auksjoner" method="GET">
+        <div class="login-field">
+          <label class="login-label">E-post</label>
+          <input class="login-input" type="email" name="email" placeholder="din@epost.no" required />
+        </div>
+        <div class="login-field">
+          <label class="login-label">Passord</label>
+          <input class="login-input" type="password" name="password" placeholder="••••••••" required />
+        </div>
+        <button type="submit" class="btn-primary login-btn">
+          Logg inn
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        </button>
+      </form>
+
+      <p class="login-footer-note">
+        Har du ikke konto? <a href="/lag-annonse">Registrer deg gratis</a>
+      </p>
+
+      <div class="login-trust">
+        <span class="login-trust-item">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Trygt og sikkert
+        </span>
+        <span class="login-trust-item">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+          Verifiserte brukere
+        </span>
+        <span class="login-trust-item">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
+          Norsk plattform
+        </span>
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>

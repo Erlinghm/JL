@@ -1,0 +1,76 @@
+<%- include('partials/head') %>
+<%- include('partials/sidebar') %>
+
+<main class="main-content">
+
+  <div class="page-header">
+    <h1 style="display:flex;align-items:center;gap:8px;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+      Om Jordleie.no
+    </h1>
+  </div>
+
+  <div class="static-page">
+
+    <h1>Fremtidens jordleie – bygget av bønder, for bønder</h1>
+    <p class="lead">
+      Jordleie.no er en digital markedsplass for utleie og leie av jordbruksareal i Norge.
+      Vi tror at åpenhet, teknologi og rettferdige priser gir bedre vilkår for alle i landbruket.
+    </p>
+
+    <!-- Mission -->
+    <div style="background:var(--green-pale); border-left:4px solid var(--green-mid); border-radius:0 var(--radius) var(--radius) 0; padding:18px 22px; margin-bottom:28px;">
+      <strong style="color:var(--green-dark);">Vår misjon:</strong>
+      <span style="color:var(--text-mid); font-size:0.95rem; margin-left:6px;">
+        Å gjøre det enkelt, trygt og rettferdig å leie ut og leie inn jordbruksareal over hele Norge.
+      </span>
+    </div>
+
+    <h2>Bakgrunn</h2>
+    <p>
+      I dag foregår mye jordleie i Norge gjennom uformelle nettverk, naboavtaler og tilfeldige henvendelser.
+      Det gir sjelden rettferdig markedspris – verken for grunneier eller leietaker.
+    </p>
+    <p>
+      Jordleie.no ble startet med ett mål: å lage en åpen, nasjonal markedsplass der alle arealer
+      prises etter reell etterspørsel gjennom en transparent auksjonsprosess.
+    </p>
+
+    <h2>Hva vi tilbyr</h2>
+    <p>
+      Plattformen lar grunneiere legge ut sine arealer med kartinformasjon, jordbeskrivelse og
+      auksjonsvilkår. Potensielle leietakere kan bla gjennom alle tilgjengelige arealer, filtrere
+      på fylke og jordtype, og legge inn bud direkte.
+    </p>
+    <p>
+      Vi henter inn jordkartdata og satellittbilder for å gi leietakere best mulig grunnlag
+      for å vurdere et areal – uten å måtte besøke det fysisk først.
+    </p>
+
+    <h2>Hvem er vi?</h2>
+    <p>
+      Vi er et lite team med bakgrunn fra norsk landbruk, teknologi og jus. Vi jobber tett med
+      bondeorganisasjoner, Norsk Landbruksrådgiving og Kartverket for å bygge en plattform
+      som faktisk fungerer i norsk virkelighet.
+    </p>
+
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:32px;">
+      <% [
+        { name: "Erik Nygård", role: "Gründer & CEO", initial: "EN" },
+        { name: "Silje Berg",  role: "Produktsjef",    initial: "SB" },
+        { name: "Magnus Vik",  role: "Teknologisjef",  initial: "MV" }
+      ].forEach(person => { %>
+        <div style="background:var(--white); border:1.5px solid var(--border); border-radius:var(--radius-lg); padding:20px; text-align:center;">
+          <div style="width:52px; height:52px; border-radius:50%; background:var(--green-dark); display:flex; align-items:center; justify-content:center; color:white; font-size:1.1rem; font-weight:700; margin:0 auto 10px;">
+            <%= person.initial %>
+          </div>
+          <div style="font-weight:700; font-size:0.9rem;"><%= person.name %></div>
+          <div style="color:var(--text-light); font-size:0.78rem; margin-top:3px;"><%= person.role %></div>
+        </div>
+      <% }) %>
+    </div>
+
+  </div>
+
+  <%- include('partials/footer') %>
+</main>
