@@ -36,7 +36,7 @@ app.use((req, res) => {
 });
 
 // ---- Start Server ----
-const server = app.listen(PORT, () => {
+const server = app.listen(PORT, "0.0.0.0", () => {
   console.log(`🚜 Jordleie.no kjører på http://localhost:${PORT}`);
 });
 
