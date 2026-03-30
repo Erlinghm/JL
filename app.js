@@ -23,12 +23,22 @@ app.use(express.static(path.join(__dirname, "public"))); // Serve static files
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
+// ---- Session ----
+const session = require("express-session");
+app.use(session({
+  secret: process.env.SESSION_SECRET || "midlertidig-hemmelighet",
+  resave: false,
+  saveUninitialized: false,
+}));
+
 // ---- Routes ----
 const indexRoutes = require("./routes/index");
 const farmRoutes  = require("./routes/farms");
+const adminRoutes = require("./routes/admin");
 
 app.use("/", indexRoutes);
 app.use("/auksjoner", farmRoutes);
+app.use("/admin", adminRoutes);
 
 // ---- 404 Handler ----
 app.use((req, res) => {
