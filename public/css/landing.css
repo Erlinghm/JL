@@ -126,13 +126,22 @@ img { max-width: 100%; display: block; }
 .btn-nav-primary:hover { background: var(--green-mid); }
 
 /* ============================================================
-   HERO
+   HERO – Sanna.no-teknikk
    ============================================================ */
 .lp-hero {
-  padding: 0;
-  background: var(--bg);
   position: relative;
   overflow: hidden;
+  width: 100%;
+  min-height: 620px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(
+    50% 50%,
+    rgba(250, 250, 247, 0) 0%,
+    #FAFAF7 100%
+  );
+  padding: 120px 0 0;
 }
 
 /* Subtle top decorative line */
@@ -144,18 +153,45 @@ img { max-width: 100%; display: block; }
   right: 0;
   height: 3px;
   background: linear-gradient(90deg, var(--green), transparent 60%);
+  z-index: 3;
 }
 
-.lp-hero-inner {
-  max-width: var(--max-w);
-  margin: 0 auto;
+/* Sentrert tekst og CTA */
+.lp-hero-text {
   position: relative;
+  z-index: 2;
+  text-align: center;
+  max-width: 640px;
+  padding: 0 2rem 5rem;
 }
 
-.lp-hero-inner.lp-hero-triple {
-  max-width: none;
-  margin: 0;
+/* Bildewrappere – absolutt posisjonert, stikker ut på sidene */
+.lp-hero-img-left,
+.lp-hero-img-right {
+  position: absolute;
+  bottom: 0;
+  width: 700px;
+  height: 600px;
+  z-index: 1;
+  mix-blend-mode: darken;
+  pointer-events: none;
+  user-select: none;
 }
+
+.lp-hero-img-left  { left: -200px; }
+.lp-hero-img-right { right: -200px; }
+
+.lp-hero-img-left img,
+.lp-hero-img-right img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom;
+  display: block;
+}
+
+/* Speilvend høyre bilde */
+.lp-hero-img-right img { transform: scaleX(-1); }
 
 .lp-hero-eyebrow {
   display: inline-flex;
@@ -177,7 +213,6 @@ img { max-width: 100%; display: block; }
   line-height: 1.04;
   letter-spacing: -0.035em;
   color: var(--text);
-  max-width: 700px;
   margin-bottom: 24px;
 }
 
@@ -190,61 +225,15 @@ img { max-width: 100%; display: block; }
   font-size: 1.12rem;
   color: var(--text-mid);
   max-width: 500px;
+  margin: 0 auto 40px;
   line-height: 1.7;
-  margin-bottom: 40px;
 }
 
 .lp-hero-ctas {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
-}
-
-/* Three-column hero layout */
-.lp-hero-triple {
-  display: grid;
-  grid-template-columns: 1fr 1.4fr 1fr;
-  gap: 0;
-  align-items: end;
-  min-height: 620px;
-  max-width: none;
-  margin: 0;
-}
-
-.lp-hero-text {
-  min-width: 0;
-  text-align: center;
-  padding: 80px 48px 80px;
-}
-
-.lp-hero-text .lp-hero-sub {
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.lp-hero-text .lp-hero-ctas {
   justify-content: center;
-}
-
-.lp-hero-image {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  overflow: hidden;
-  height: 100%;
-}
-
-.lp-hero-image img {
-  width: 100%;
-  height: auto;
-  max-height: 100%;
-  object-fit: contain;
-  object-position: center bottom;
-  display: block;
-}
-
-.lp-hero-image--mirrored img {
-  transform: scaleX(-1);
 }
 
 .btn-primary {
@@ -2054,14 +2043,213 @@ body.has-sidebar {
 .lp-benefits-col h3 svg { flex-shrink: 0; }
 
 /* ============================================================
+   SLIK FUNGERER DET – Vertikal tidslinje med faner
+   ============================================================ */
+.how-section {
+  width: 100%;
+  padding: 100px 2rem;
+  background-color: #faf8f3;
+}
+
+.how-inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.how-heading {
+  font-size: 2.2rem;
+  font-weight: 600;
+  color: #1f2223;
+  text-align: center;
+  margin: 0 0 40px;
+}
+
+/* Faner */
+.how-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 60px;
+  background: #ede9e0;
+  padding: 6px;
+  border-radius: 100px;
+}
+
+.how-tab {
+  padding: 10px 28px;
+  border: none;
+  background: transparent;
+  border-radius: 100px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-family: inherit;
+}
+
+.how-tab--active {
+  background: #ffffff;
+  color: #1f2223;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+}
+
+/* Innhold */
+.how-content {
+  width: 100%;
+}
+
+.how-content--hidden {
+  display: none;
+}
+
+/* Markør-rad (01 / 02 / 03 på linjen) */
+.how-marker-row {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  align-items: center;
+}
+
+.how-left-space,
+.how-right-space {
+  flex: 1;
+  height: 40px;
+}
+
+.how-left-space {
+  border-right: 2px solid var(--green);
+}
+
+.how-marker-col {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.how-marker {
+  font-size: 52px;
+  font-weight: 400;
+  color: var(--green);
+  line-height: 1;
+  min-width: 80px;
+  text-align: center;
+  background: #faf8f3;
+  padding: 0 12px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Steg-rad */
+.how-step {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  width: 100%;
+  gap: 0;
+  min-height: 320px;
+}
+
+.how-step--reverse .how-step-side--left { order: 3; }
+.how-step--reverse .how-step-line       { order: 2; }
+.how-step--reverse .how-step-side--right { order: 1; }
+
+.how-step-side {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 40px;
+}
+
+.how-step-side--left  { justify-content: flex-end; }
+.how-step-side--right { justify-content: flex-start; }
+
+/* Den kontinuerlige vertikale linjen */
+.how-step-line {
+  width: 2px;
+  background-color: var(--green);
+  flex-shrink: 0;
+  margin: -1px 39px;
+}
+
+/* Bilde */
+.how-img {
+  width: 100%;
+  max-width: 420px;
+  height: 300px;
+  object-fit: cover;
+  border-radius: 12px;
+  display: block;
+}
+
+/* Tekst */
+.how-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #1f2223;
+  margin: 0 0 16px;
+}
+
+.how-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.how-list li {
+  font-size: 0.95rem;
+  color: #555;
+  line-height: 1.6;
+  padding-left: 1.4rem;
+  position: relative;
+}
+
+.how-list li::before {
+  content: "→";
+  position: absolute;
+  left: 0;
+  color: var(--green);
+}
+
+/* ============================================================
    RESPONSIVE
    ============================================================ */
 @media (max-width: 960px) {
   .lp-nav-links { display: none; }
 
+  /* How it works – nettbrett: vertikal layout */
+  .how-step,
+  .how-step--reverse {
+    flex-direction: column;
+    min-height: auto;
+    gap: 24px;
+  }
+  .how-step--reverse .how-step-side--left,
+  .how-step--reverse .how-step-line,
+  .how-step--reverse .how-step-side--right { order: unset; }
+  .how-step-side--left,
+  .how-step-side--right { justify-content: flex-start; padding: 0 0 0 20px; }
+  .how-step-line { width: 40px; height: 2px; margin: 0 0 0 20px; }
+  .how-left-space { border-right: none; border-bottom: 2px solid var(--green); }
+
   .lp-hero-split {
     grid-template-columns: 1fr;
     gap: 40px;
+  }
+
+  /* Trekk bildene lengre inn på nettbrett */
+  .lp-hero-img-left  { left: -300px; width: 550px; }
+  .lp-hero-img-right { right: -300px; width: 550px; }
+
+  .lp-hero-text {
+    max-width: 100%;
+    padding: 0 32px 4rem;
   }
 
   .lp-process-grid,
@@ -2072,6 +2260,18 @@ body.has-sidebar {
   .lp-comparison-grid,
   .lp-benefits-grid {
     grid-template-columns: 1fr;
+  }
+
+  /* Auctions preview: 2 columns on tablet */
+  .lp-auctions-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Om oss + kontakt: single column */
+  .lp-om-grid,
+  .lp-kontakt-grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
   }
 
   .lp-footer-inner {
@@ -2102,11 +2302,32 @@ body.has-sidebar {
 
 @media (max-width: 620px) {
   .lp-nav { padding: 0 20px; }
-  .lp-nav-inner { gap: 16px; }
+  .lp-nav-inner { gap: 12px; }
+  /* Hide secondary nav button on small screens */
+  .btn-nav-ghost { display: none; }
 
-  .lp-hero,
+  /* How it works – mobil */
+  .how-section { padding: 60px 1rem; }
+  .how-heading { font-size: 1.6rem; }
+  .how-marker { font-size: 36px; }
+  .how-title { font-size: 1.2rem; }
+  .how-tab { padding: 8px 18px; font-size: 0.9rem; }
+  .how-img { max-width: 100%; height: 220px; }
+
   .lp-section,
   .lp-cta { padding-left: 20px; padding-right: 20px; }
+
+  /* Hero på mobil: skjul bilder, forenklet layout */
+  .lp-hero-img-left,
+  .lp-hero-img-right { display: none; }
+
+  .lp-hero {
+    min-height: auto;
+    padding: 60px 0 0;
+    background: #FAFAF7;
+  }
+
+  .lp-hero-text { padding: 0 24px 3rem; }
 
   .lp-stats { padding: 20px; }
   .lp-stats-inner { flex-wrap: wrap; gap: 16px; }
@@ -2119,6 +2340,16 @@ body.has-sidebar {
 
   .lp-process-grid,
   .lp-testimonials-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Auctions preview: single column on mobile */
+  .lp-auctions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Contact form: collapse 2-col row to single column */
+  .lp-form-row {
     grid-template-columns: 1fr;
   }
 
