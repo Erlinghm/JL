@@ -1,4 +1,4 @@
-const prisma = require("../prisma/client");
+const defaultPrisma = require("../prisma/client");
 
 const DEFAULT_LAT = 60.472;
 const DEFAULT_LNG = 8.469;
@@ -79,90 +79,6 @@ function viewStatusFromListing(status) {
   }
 }
 
-async function ensureShadowUser(tx, { fullName, role, county, bio, verificationType }) {
-  const normalizedName = String(fullName || "Anonym").trim() || "Anonym";
-  const email = `${slugify(normalizedName)}-${role.toLowerCase()}@jordleie.invalid`;
-  const user = await tx.user.upsert({
-    where: { email },
-    update: {
-      fullName: normalizedName,
-      role,
-      status: role === "OWNER" ? "PENDING_VERIFICATION" : "ACTIVE",
-      profile: {
-        upsert: {
-          update: {
-            county: county || null,
-            bio: bio || undefined,
-          },
-          create: {
-            county: county || null,
-            bio: bio || null,
-          },
-        },
-      },
-    },
-    create: {
-      email,
-      fullName: normalizedName,
-      role,
-      status: role === "OWNER" ? "PENDING_VERIFICATION" : "ACTIVE",
-      profile: {
-        create: {
-          county: county || null,
-          bio: bio || null,
-        },
-      },
-    },
-    include: { profile: true },
-  });
-
-  if (verificationType) {
-    await tx.userVerification.upsert({
-      where: {
-        userId_type: {
-          userId: user.id,
-          type: verificationType,
-        },
-      },
-      update: {},
-      create: {
-        userId: user.id,
-        type: verificationType,
-        status: role === "OWNER" ? "PENDING" : "VERIFIED",
-      },
-    });
-  }
-
-  return user;
-}
-
-async function ensureCropLinks(tx, farmId, cropTypes = []) {
-  const uniqueCropTypes = [...new Set((cropTypes || []).map((crop) => String(crop).trim()).filter(Boolean))];
-
-  for (const cropTypeName of uniqueCropTypes) {
-    const slug = slugify(cropTypeName);
-    const cropType = await tx.cropType.upsert({
-      where: { slug },
-      update: { name: cropTypeName },
-      create: { slug, name: cropTypeName },
-    });
-
-    await tx.farmCropType.upsert({
-      where: {
-        farmId_cropTypeId: {
-          farmId,
-          cropTypeId: cropType.id,
-        },
-      },
-      update: {},
-      create: {
-        farmId,
-        cropTypeId: cropType.id,
-      },
-    });
-  }
-}
-
 function toView(listing) {
   if (!listing) return null;
 
@@ -212,223 +128,317 @@ function toView(listing) {
   };
 }
 
-async function find(filter = {}) {
-  const where = {};
-
-  if (filter.fylke) {
-    where.farm = { is: { county: filter.fylke } };
-  }
-
-  if (filter.status) {
-    where.status = listingStatusFromInput(filter.status, new Date(), new Date(Date.now() + 1));
-  }
-
-  const listings = await prisma.listing.findMany({
-    where,
-    include: listingInclude,
-    orderBy: { auctionEndAt: "asc" },
-  });
-
-  return listings.map(toView);
-}
-
-async function findById(id) {
-  const listing = await prisma.listing.findUnique({
-    where: { id: parseInt(id, 10) },
-    include: listingInclude,
-  });
-
-  return toView(listing);
-}
-
-async function create(data) {
-  const {
-    cropTypes = [],
-    title,
-    description,
-    ownerName,
-    ownerDescription,
-    municipality,
-    fylke,
-    address,
-    lat,
-    lng,
-    fieldPolygon,
-    sizeDekar,
-    soilType,
-    soilQuality,
-    soilComposition,
-    auctionStart,
-    auctionEnd,
-    startingBid,
-    currentBid,
-    rentalPeriodYears,
-    status,
-  } = data;
-
-  const auctionStartAt = new Date(auctionStart);
-  const auctionEndAt = new Date(auctionEnd);
-
-  if (Number.isNaN(auctionStartAt.getTime()) || Number.isNaN(auctionEndAt.getTime())) {
-    throw new Error("Auksjonsdatoene er ugyldige.");
-  }
-
-  if (auctionEndAt <= auctionStartAt) {
-    throw new Error("Auksjonen må slutte etter at den starter.");
-  }
-
-  const listingStatus = listingStatusFromInput(status, auctionStartAt, auctionEndAt);
-  const polygon = parseJson(fieldPolygon, []);
-  const composition = parseJson(soilComposition, DEFAULT_SOIL_COMPOSITION);
-
-  const listing = await prisma.$transaction(async (tx) => {
-    const owner = await ensureShadowUser(tx, {
-      fullName: ownerName,
-      role: "OWNER",
-      county: fylke,
-      bio: ownerDescription,
-      verificationType: "LANDOWNER",
-    });
-
-    const farm = await tx.farm.create({
-      data: {
-        ownerUserId: owner.id,
-        title,
-        description,
-        municipality,
-        county: fylke,
-        address: address || null,
-        centroidLat: Number(lat) || DEFAULT_LAT,
-        centroidLng: Number(lng) || DEFAULT_LNG,
-        soilType: soilType || DEFAULT_SOIL_TYPE,
-        soilQuality: soilQuality || DEFAULT_SOIL_QUALITY,
-      },
-    });
-
-    await tx.farmParcel.create({
-      data: {
-        farmId: farm.id,
-        name: title,
-        areaDekar: Number(sizeDekar) || 0,
-        polygonJson: polygon,
-        soilCompositionJson: composition,
-      },
-    });
-
-    await ensureCropLinks(tx, farm.id, cropTypes);
-
-    return tx.listing.create({
-      data: {
-        farmId: farm.id,
-        ownerUserId: owner.id,
-        status: listingStatus,
-        rentalPeriodYears: Number(rentalPeriodYears) || 5,
-        startingBidPerDekarYear: Number(startingBid) || 0,
-        currentBidPerDekarYear: Number(currentBid) || 0,
-        auctionStartAt,
-        auctionEndAt,
-        publishedAt: new Date(),
-      },
-    });
-  });
-
-  return findById(listing.id);
-}
-
-async function updateBid(id, bidAmount, bidderName = "Anonym") {
-  const listingId = parseInt(id, 10);
-  const amount = Number(bidAmount);
-
-  if (!Number.isFinite(amount) || amount <= 0) {
-    throw new Error("Budet må være større enn 0.");
-  }
-
-  await prisma.$transaction(async (tx) => {
-    const listing = await tx.listing.findUnique({
-      where: { id: listingId },
-      include: {
-        farm: {
-          include: {
-            parcels: true,
+function createFarmModel(prisma = defaultPrisma) {
+  async function ensureShadowUser(tx, { fullName, role, county, bio, verificationType }) {
+    const normalizedName = String(fullName || "Anonym").trim() || "Anonym";
+    const email = `${slugify(normalizedName)}-${role.toLowerCase()}@jordleie.invalid`;
+    const user = await tx.user.upsert({
+      where: { email },
+      update: {
+        fullName: normalizedName,
+        role,
+        status: role === "OWNER" ? "PENDING_VERIFICATION" : "ACTIVE",
+        profile: {
+          upsert: {
+            update: {
+              county: county || null,
+              bio: bio || undefined,
+            },
+            create: {
+              county: county || null,
+              bio: bio || null,
+            },
           },
         },
       },
-    });
-
-    if (!listing) {
-      throw new Error("Auksjonen finnes ikke.");
-    }
-
-    const minimumBid =
-      listing.currentBidPerDekarYear > 0
-        ? listing.currentBidPerDekarYear + 1
-        : listing.startingBidPerDekarYear;
-
-    if (amount < minimumBid) {
-      throw new Error("Budet må være høyere enn gjeldende minstepris.");
-    }
-
-    const bidder = await ensureShadowUser(tx, {
-      fullName: bidderName,
-      role: "TENANT",
-      county: listing.farm.county,
-      verificationType: "FARMER",
-    });
-
-    await tx.bid.updateMany({
-      where: {
-        listingId,
-        status: {
-          in: ["VALID", "WINNING"],
+      create: {
+        email,
+        fullName: normalizedName,
+        role,
+        status: role === "OWNER" ? "PENDING_VERIFICATION" : "ACTIVE",
+        profile: {
+          create: {
+            county: county || null,
+            bio: bio || null,
+          },
         },
       },
-      data: {
-        status: "OUTBID",
-      },
+      include: { profile: true },
     });
 
-    await tx.bid.create({
-      data: {
-        listingId,
-        bidderUserId: bidder.id,
-        amountPerDekarYear: amount,
-        totalAmountPerYear: amount * sumArea(listing.farm.parcels),
-        status: "WINNING",
-      },
-    });
+    if (verificationType) {
+      await tx.userVerification.upsert({
+        where: {
+          userId_type: {
+            userId: user.id,
+            type: verificationType,
+          },
+        },
+        update: {},
+        create: {
+          userId: user.id,
+          type: verificationType,
+          status: role === "OWNER" ? "PENDING" : "VERIFIED",
+        },
+      });
+    }
 
-    await tx.listing.update({
-      where: { id: listingId },
-      data: {
-        currentBidPerDekarYear: amount,
-      },
-    });
-  });
-
-  return findById(listingId);
-}
-
-async function deleteAll() {
-  await prisma.message.deleteMany({});
-  await prisma.conversationParticipant.deleteMany({});
-  await prisma.conversation.deleteMany({});
-  await prisma.lease.deleteMany({});
-  await prisma.bid.deleteMany({});
-  await prisma.listing.deleteMany({});
-  await prisma.farmCropType.deleteMany({});
-  await prisma.cropType.deleteMany({});
-  await prisma.farmParcel.deleteMany({});
-  await prisma.farm.deleteMany({});
-  await prisma.userVerification.deleteMany({});
-  await prisma.userProfile.deleteMany({});
-  await prisma.contactSubmission.deleteMany({});
-  await prisma.user.deleteMany({});
-}
-
-async function insertMany(farms) {
-  for (const farmData of farms) {
-    await create(farmData);
+    return user;
   }
+
+  async function ensureCropLinks(tx, farmId, cropTypes = []) {
+    const uniqueCropTypes = [...new Set((cropTypes || []).map((crop) => String(crop).trim()).filter(Boolean))];
+
+    for (const cropTypeName of uniqueCropTypes) {
+      const slug = slugify(cropTypeName);
+      const cropType = await tx.cropType.upsert({
+        where: { slug },
+        update: { name: cropTypeName },
+        create: { slug, name: cropTypeName },
+      });
+
+      await tx.farmCropType.upsert({
+        where: {
+          farmId_cropTypeId: {
+            farmId,
+            cropTypeId: cropType.id,
+          },
+        },
+        update: {},
+        create: {
+          farmId,
+          cropTypeId: cropType.id,
+        },
+      });
+    }
+  }
+
+  async function find(filter = {}) {
+    const where = {};
+
+    if (filter.fylke) {
+      where.farm = { is: { county: filter.fylke } };
+    }
+
+    if (filter.status) {
+      where.status = listingStatusFromInput(filter.status, new Date(), new Date(Date.now() + 1));
+    }
+
+    const listings = await prisma.listing.findMany({
+      where,
+      include: listingInclude,
+      orderBy: { auctionEndAt: "asc" },
+    });
+
+    return listings.map(toView);
+  }
+
+  async function findById(id) {
+    const listing = await prisma.listing.findUnique({
+      where: { id: parseInt(id, 10) },
+      include: listingInclude,
+    });
+
+    return toView(listing);
+  }
+
+  async function create(data) {
+    const {
+      cropTypes = [],
+      title,
+      description,
+      ownerName,
+      ownerDescription,
+      municipality,
+      fylke,
+      address,
+      lat,
+      lng,
+      fieldPolygon,
+      sizeDekar,
+      soilType,
+      soilQuality,
+      soilComposition,
+      auctionStart,
+      auctionEnd,
+      startingBid,
+      currentBid,
+      rentalPeriodYears,
+      status,
+    } = data;
+
+    const auctionStartAt = new Date(auctionStart);
+    const auctionEndAt = new Date(auctionEnd);
+
+    if (Number.isNaN(auctionStartAt.getTime()) || Number.isNaN(auctionEndAt.getTime())) {
+      throw new Error("Auksjonsdatoene er ugyldige.");
+    }
+
+    if (auctionEndAt <= auctionStartAt) {
+      throw new Error("Auksjonen må slutte etter at den starter.");
+    }
+
+    const listingStatus = listingStatusFromInput(status, auctionStartAt, auctionEndAt);
+    const polygon = parseJson(fieldPolygon, []);
+    const composition = parseJson(soilComposition, DEFAULT_SOIL_COMPOSITION);
+
+    const listing = await prisma.$transaction(async (tx) => {
+      const owner = await ensureShadowUser(tx, {
+        fullName: ownerName,
+        role: "OWNER",
+        county: fylke,
+        bio: ownerDescription,
+        verificationType: "LANDOWNER",
+      });
+
+      const farm = await tx.farm.create({
+        data: {
+          ownerUserId: owner.id,
+          title,
+          description,
+          municipality,
+          county: fylke,
+          address: address || null,
+          centroidLat: Number(lat) || DEFAULT_LAT,
+          centroidLng: Number(lng) || DEFAULT_LNG,
+          soilType: soilType || DEFAULT_SOIL_TYPE,
+          soilQuality: soilQuality || DEFAULT_SOIL_QUALITY,
+        },
+      });
+
+      await tx.farmParcel.create({
+        data: {
+          farmId: farm.id,
+          name: title,
+          areaDekar: Number(sizeDekar) || 0,
+          polygonJson: polygon,
+          soilCompositionJson: composition,
+        },
+      });
+
+      await ensureCropLinks(tx, farm.id, cropTypes);
+
+      return tx.listing.create({
+        data: {
+          farmId: farm.id,
+          ownerUserId: owner.id,
+          status: listingStatus,
+          rentalPeriodYears: Number(rentalPeriodYears) || 5,
+          startingBidPerDekarYear: Number(startingBid) || 0,
+          currentBidPerDekarYear: Number(currentBid) || 0,
+          auctionStartAt,
+          auctionEndAt,
+          publishedAt: new Date(),
+        },
+      });
+    });
+
+    return model.findById(listing.id);
+  }
+
+  async function updateBid(id, bidAmount, bidderName = "Anonym") {
+    const listingId = parseInt(id, 10);
+    const amount = Number(bidAmount);
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      throw new Error("Budet må være større enn 0.");
+    }
+
+    await prisma.$transaction(async (tx) => {
+      const listing = await tx.listing.findUnique({
+        where: { id: listingId },
+        include: {
+          farm: {
+            include: {
+              parcels: true,
+            },
+          },
+        },
+      });
+
+      if (!listing) {
+        throw new Error("Auksjonen finnes ikke.");
+      }
+
+      const minimumBid =
+        listing.currentBidPerDekarYear > 0
+          ? listing.currentBidPerDekarYear + 1
+          : listing.startingBidPerDekarYear;
+
+      if (amount < minimumBid) {
+        throw new Error("Budet må være høyere enn gjeldende minstepris.");
+      }
+
+      const bidder = await ensureShadowUser(tx, {
+        fullName: bidderName,
+        role: "TENANT",
+        county: listing.farm.county,
+        verificationType: "FARMER",
+      });
+
+      await tx.bid.updateMany({
+        where: {
+          listingId,
+          status: {
+            in: ["VALID", "WINNING"],
+          },
+        },
+        data: {
+          status: "OUTBID",
+        },
+      });
+
+      await tx.bid.create({
+        data: {
+          listingId,
+          bidderUserId: bidder.id,
+          amountPerDekarYear: amount,
+          totalAmountPerYear: amount * sumArea(listing.farm.parcels),
+          status: "WINNING",
+        },
+      });
+
+      await tx.listing.update({
+        where: { id: listingId },
+        data: {
+          currentBidPerDekarYear: amount,
+        },
+      });
+    });
+
+    return model.findById(listingId);
+  }
+
+  async function deleteAll() {
+    await prisma.message.deleteMany({});
+    await prisma.conversationParticipant.deleteMany({});
+    await prisma.conversation.deleteMany({});
+    await prisma.lease.deleteMany({});
+    await prisma.bid.deleteMany({});
+    await prisma.listing.deleteMany({});
+    await prisma.farmCropType.deleteMany({});
+    await prisma.cropType.deleteMany({});
+    await prisma.farmParcel.deleteMany({});
+    await prisma.farm.deleteMany({});
+    await prisma.userVerification.deleteMany({});
+    await prisma.userProfile.deleteMany({});
+    await prisma.contactSubmission.deleteMany({});
+    await prisma.user.deleteMany({});
+  }
+
+  async function insertMany(farms) {
+    for (const farmData of farms) {
+      await model.create(farmData);
+    }
+  }
+
+  const model = { find, findById, create, updateBid, deleteAll, insertMany, toView };
+
+  return model;
 }
 
-module.exports = { find, findById, create, updateBid, deleteAll, insertMany, toView };
+const farmModel = createFarmModel();
+
+module.exports = farmModel;
+module.exports.createFarmModel = createFarmModel;
+module.exports.toView = toView;

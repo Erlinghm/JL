@@ -3,81 +3,89 @@
 // ============================================================
 
 const express = require("express");
-const router  = express.Router();
-const prisma  = require("../prisma/client");
+const defaultPrisma = require("../prisma/client");
 
-// Public landing page (pre-login)
-router.get("/", (req, res) => {
-  res.render("landing", { title: "Jordleie.no – Fremtidens jordleie" });
-});
+function createIndexRouter({ prisma = defaultPrisma } = {}) {
+  const router = express.Router();
 
-// About page
-router.get("/om-jordleie", (req, res) => {
-  res.render("about", { title: "Om Jordleie.no" });
-});
+  // Public landing page (pre-login)
+  router.get("/", (req, res) => {
+    res.render("landing", { title: "Jordleie.no – Fremtidens jordleie" });
+  });
 
-// How to buy and sell
-router.get("/hvordan-kjope-selge", (req, res) => {
-  res.render("how-it-works", { title: "Hvordan kjøpe og selge" });
-});
+  // About page
+  router.get("/om-jordleie", (req, res) => {
+    res.render("about", { title: "Om Jordleie.no" });
+  });
 
-// Articles
-router.get("/artikler", (req, res) => {
-  res.render("articles", { title: "Artikler" });
-});
+  // How to buy and sell
+  router.get("/hvordan-kjope-selge", (req, res) => {
+    res.render("how-it-works", { title: "Hvordan kjøpe og selge" });
+  });
 
-// Contact
-router.get("/kontakt", (req, res) => {
-  const sendt = req.query.sendt === "true";
-  res.render("contact", { title: "Kontakt oss", sendt });
-});
+  // Articles
+  router.get("/artikler", (req, res) => {
+    res.render("articles", { title: "Artikler" });
+  });
 
-// POST /kontakt – handle contact form submission
-router.post("/kontakt", async (req, res) => {
-  try {
-    const { name, email, subject, message } = req.body;
+  // Contact
+  router.get("/kontakt", (req, res) => {
+    const sendt = req.query.sendt === "true";
+    res.render("contact", { title: "Kontakt oss", sendt });
+  });
 
-    if (!name || !email || !message) {
-      return res.status(400).render("error", {
+  // POST /kontakt – handle contact form submission
+  router.post("/kontakt", async (req, res) => {
+    try {
+      const { name, email, subject, message } = req.body;
+
+      if (!name || !email || !message) {
+        return res.status(400).render("error", {
+          title: "Feil – Jordleie.no",
+          message: "Navn, e-post og melding er påkrevd.",
+          hint: "Fyll ut alle obligatoriske felter og prøv igjen.",
+        });
+      }
+
+      await prisma.contactSubmission.create({
+        data: {
+          name: String(name).trim(),
+          email: String(email).trim(),
+          subject: subject ? String(subject).trim() : null,
+          message: String(message).trim(),
+        },
+      });
+
+      res.redirect("/kontakt?sendt=true");
+    } catch (err) {
+      console.error("POST /kontakt error:", err);
+      res.status(500).render("error", {
         title: "Feil – Jordleie.no",
-        message: "Navn, e-post og melding er påkrevd.",
-        hint: "Fyll ut alle obligatoriske felter og prøv igjen.",
+        message: "Kunne ikke sende meldingen.",
+        hint: err.message,
       });
     }
+  });
 
-    await prisma.contactSubmission.create({
-      data: {
-        name: String(name).trim(),
-        email: String(email).trim(),
-        subject: subject ? String(subject).trim() : null,
-        message: String(message).trim(),
-      },
-    });
+  // Login page
+  router.get("/logg-inn", (req, res) => {
+    res.render("login", { title: "Logg inn – Jordleie.no" });
+  });
 
-    res.redirect("/kontakt?sendt=true");
-  } catch (err) {
-    console.error("POST /kontakt error:", err);
-    res.status(500).render("error", {
-      title: "Feil – Jordleie.no",
-      message: "Kunne ikke sende meldingen.",
-      hint: err.message,
-    });
-  }
-});
+  // Min bruker (My profile / create listing)
+  router.get("/min-bruker", (req, res) => {
+    res.render("my-profile", { title: "Min bruker" });
+  });
 
-// Login page
-router.get("/logg-inn", (req, res) => {
-  res.render("login", { title: "Logg inn – Jordleie.no" });
-});
+  // Lag annonse (Create listing)
+  router.get("/lag-annonse", (req, res) => {
+    res.render("create-listing", { title: "Lag annonse" });
+  });
 
-// Min bruker (My profile / create listing)
-router.get("/min-bruker", (req, res) => {
-  res.render("my-profile", { title: "Min bruker" });
-});
+  return router;
+}
 
-// Lag annonse (Create listing)
-router.get("/lag-annonse", (req, res) => {
-  res.render("create-listing", { title: "Lag annonse" });
-});
+const router = createIndexRouter();
 
 module.exports = router;
+module.exports.createIndexRouter = createIndexRouter;

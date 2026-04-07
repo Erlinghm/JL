@@ -5,6 +5,8 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
+    "test": "node --test",
+    "test:coverage": "node --test --experimental-test-coverage",
     "build": "prisma generate && prisma migrate deploy",
     "dev": "nodemon app.js",
     "postinstall": "prisma generate",
