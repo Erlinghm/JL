@@ -1,14 +1,6 @@
-// ============================================================
-// Seed Script – Populates the database with sample farm listings
-// Run with: node seed.js   (or: npm run seed)
-//
-// Requires DATABASE_URL to be set in .env and the schema to be
-// migrated first:  npx prisma migrate dev --name init
-// ============================================================
-
 require("dotenv").config();
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const Farm = require("./models/Farm");
+const prisma = require("./prisma/client");
 
 const sampleFarms = [
   {
@@ -26,20 +18,20 @@ const sampleFarms = [
     fieldPolygon: [
       [59.352, 10.848],
       [59.355, 10.855],
-      [59.351, 10.860],
-      [59.348, 10.853]
+      [59.351, 10.86],
+      [59.348, 10.853],
     ],
     sizeDekar: 142,
     soilType: "Leirjord",
     soilQuality: "God",
     soilComposition: { leire: 45, sand: 20, silt: 28, organisk: 7 },
     auctionStart: new Date("2026-03-20"),
-    auctionEnd:   new Date("2026-04-10"),
-    startingBid:  650,
-    currentBid:   720,
+    auctionEnd: new Date("2026-04-10"),
+    startingBid: 650,
     rentalPeriodYears: 5,
     status: "aktiv",
-    cropTypes: ["korn", "hvete", "bygg"]
+    cropTypes: ["korn", "hvete", "bygg"],
+    seededBids: [{ bidderName: "Sivert Dahl", amount: 720 }],
   },
   {
     title: "Vestlandsgård – Hordaland grønsaker",
@@ -57,19 +49,19 @@ const sampleFarms = [
       [60.372, 6.148],
       [60.375, 6.155],
       [60.371, 6.161],
-      [60.368, 6.154]
+      [60.368, 6.154],
     ],
     sizeDekar: 68,
     soilType: "Sandjord",
     soilQuality: "Middels",
     soilComposition: { leire: 15, sand: 50, silt: 25, organisk: 10 },
     auctionStart: new Date("2026-03-15"),
-    auctionEnd:   new Date("2026-04-05"),
-    startingBid:  480,
-    currentBid:   510,
+    auctionEnd: new Date("2026-04-05"),
+    startingBid: 480,
     rentalPeriodYears: 3,
     status: "aktiv",
-    cropTypes: ["grønnsaker", "bær", "frukt"]
+    cropTypes: ["grønnsaker", "bær", "frukt"],
+    seededBids: [{ bidderName: "Hedda Vik", amount: 510 }],
   },
   {
     title: "Trøndelag kornland – stort areal",
@@ -87,19 +79,19 @@ const sampleFarms = [
       [63.792, 11.488],
       [63.796, 11.496],
       [63.791, 11.502],
-      [63.787, 11.495]
+      [63.787, 11.495],
     ],
     sizeDekar: 310,
     soilType: "Leirjord",
     soilQuality: "God",
     soilComposition: { leire: 50, sand: 18, silt: 26, organisk: 6 },
     auctionStart: new Date("2026-04-01"),
-    auctionEnd:   new Date("2026-04-25"),
-    startingBid:  580,
-    currentBid:   0,
+    auctionEnd: new Date("2026-04-25"),
+    startingBid: 580,
     rentalPeriodYears: 7,
     status: "kommende",
-    cropTypes: ["korn", "potet"]
+    cropTypes: ["korn", "potet"],
+    seededBids: [],
   },
   {
     title: "Jæren – Rogaland fulldyrka mark",
@@ -117,19 +109,19 @@ const sampleFarms = [
       [58.732, 5.648],
       [58.736, 5.655],
       [58.731, 5.661],
-      [58.727, 5.654]
+      [58.727, 5.654],
     ],
     sizeDekar: 185,
     soilType: "Leirjord",
     soilQuality: "God",
     soilComposition: { leire: 40, sand: 22, silt: 32, organisk: 6 },
     auctionStart: new Date("2026-03-18"),
-    auctionEnd:   new Date("2026-04-08"),
-    startingBid:  710,
-    currentBid:   760,
+    auctionEnd: new Date("2026-04-08"),
+    startingBid: 710,
     rentalPeriodYears: 5,
     status: "aktiv",
-    cropTypes: ["korn", "gras", "grønnsaker"]
+    cropTypes: ["korn", "gras", "grønnsaker"],
+    seededBids: [{ bidderName: "Maren Solberg", amount: 760 }],
   },
   {
     title: "Innlandet – potet og grønsak",
@@ -147,19 +139,19 @@ const sampleFarms = [
       [60.782, 10.688],
       [60.786, 10.695],
       [60.781, 10.701],
-      [60.777, 10.694]
+      [60.777, 10.694],
     ],
     sizeDekar: 95,
     soilType: "Sandjord",
     soilQuality: "God",
     soilComposition: { leire: 10, sand: 60, silt: 20, organisk: 10 },
     auctionStart: new Date("2026-03-25"),
-    auctionEnd:   new Date("2026-04-15"),
-    startingBid:  430,
-    currentBid:   450,
+    auctionEnd: new Date("2026-04-15"),
+    startingBid: 430,
     rentalPeriodYears: 4,
     status: "aktiv",
-    cropTypes: ["potet", "grønnsaker"]
+    cropTypes: ["potet", "grønnsaker"],
+    seededBids: [{ bidderName: "Ivar Moen", amount: 450 }],
   },
   {
     title: "Hedmark – stort skogfritt kornbruk",
@@ -177,58 +169,49 @@ const sampleFarms = [
       [60.722, 11.188],
       [60.727, 11.196],
       [60.721, 11.203],
-      [60.716, 11.195]
+      [60.716, 11.195],
     ],
     sizeDekar: 240,
     soilType: "Mellomleirjord",
     soilQuality: "Varierende",
     soilComposition: { leire: 35, sand: 30, silt: 28, organisk: 7 },
     auctionStart: new Date("2026-04-05"),
-    auctionEnd:   new Date("2026-05-01"),
-    startingBid:  540,
-    currentBid:   0,
+    auctionEnd: new Date("2026-05-01"),
+    startingBid: 540,
     rentalPeriodYears: 6,
     status: "kommende",
-    cropTypes: ["korn", "raps"]
-  }
+    cropTypes: ["korn", "raps"],
+    seededBids: [],
+  },
 ];
 
 async function seed() {
   try {
-    console.log("🔗 Connecting to PostgreSQL...");
+    console.log("🔗 Knytter til databasen...");
+    await Farm.deleteAll();
+    console.log("🗑️  Tømte eksisterende data");
 
-    // Wipe existing data
-    await prisma.bid.deleteMany({});
-    await prisma.farmCropType.deleteMany({});
-    await prisma.farm.deleteMany({});
-    console.log("🗑️  Deleted old data");
-
-    // Insert all sample farms
     for (const farmData of sampleFarms) {
-      const { cropTypes, ...farmInput } = farmData;
-      
-      // Convert dates and JSON fields
-      const farm = await prisma.farm.create({
-        data: {
-          ...farmInput,
-          fieldPolygon: JSON.stringify(farmInput.fieldPolygon),
-          soilComposition: JSON.stringify(farmInput.soilComposition),
-        },
-      });
+      const { seededBids = [], ...listingData } = farmData;
+      const listing = await Farm.create(listingData);
 
-      // Add crop types
-      for (const cropType of cropTypes) {
-        await prisma.farmCropType.create({
-          data: {
-            farmId: farm.id,
-            cropType,
-          },
-        });
+      for (const bid of seededBids) {
+        await Farm.updateBid(listing.id, bid.amount, bid.bidderName);
       }
     }
 
-    console.log(`🌱 Added ${sampleFarms.length} farms`);
-    console.log("✅ Done! Start the server with: npm run dev");
+    await prisma.contactSubmission.create({
+      data: {
+        name: "Demo Bonde",
+        email: "demo@jordleie.invalid",
+        subject: "Generelt spørsmål",
+        message: "Kan dere hjelpe meg i gang med første annonse?",
+        status: "NEW",
+      },
+    });
+
+    console.log(`🌱 La inn ${sampleFarms.length} auksjoner`);
+    console.log("✅ Ferdig! Start serveren med: npm run dev");
   } catch (err) {
     console.error("❌ Error:", err);
     process.exit(1);

@@ -4,6 +4,7 @@
 
 const express = require("express");
 const router  = express.Router();
+const prisma  = require("../prisma/client");
 
 // Public landing page (pre-login)
 router.get("/", (req, res) => {
@@ -32,9 +33,36 @@ router.get("/kontakt", (req, res) => {
 });
 
 // POST /kontakt – handle contact form submission
-router.post("/kontakt", (req, res) => {
-  // TODO: send email via Nodemailer or similar
-  res.redirect("/kontakt?sendt=true");
+router.post("/kontakt", async (req, res) => {
+  try {
+    const { name, email, subject, message } = req.body;
+
+    if (!name || !email || !message) {
+      return res.status(400).render("error", {
+        title: "Feil – Jordleie.no",
+        message: "Navn, e-post og melding er påkrevd.",
+        hint: "Fyll ut alle obligatoriske felter og prøv igjen.",
+      });
+    }
+
+    await prisma.contactSubmission.create({
+      data: {
+        name: String(name).trim(),
+        email: String(email).trim(),
+        subject: subject ? String(subject).trim() : null,
+        message: String(message).trim(),
+      },
+    });
+
+    res.redirect("/kontakt?sendt=true");
+  } catch (err) {
+    console.error("POST /kontakt error:", err);
+    res.status(500).render("error", {
+      title: "Feil – Jordleie.no",
+      message: "Kunne ikke sende meldingen.",
+      hint: err.message,
+    });
+  }
 });
 
 // Login page
