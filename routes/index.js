@@ -4,8 +4,14 @@
 
 const express = require("express");
 const defaultPrisma = require("../prisma/client");
+const defaultAuth = require("../lib/auth");
 
-function createIndexRouter({ prisma = defaultPrisma } = {}) {
+function readMessage(value) {
+  if (!value || typeof value !== "string") return null;
+  return value.trim() || null;
+}
+
+function createIndexRouter({ prisma = defaultPrisma, auth = defaultAuth } = {}) {
   const router = express.Router();
 
   // Public landing page (pre-login)
@@ -68,18 +74,169 @@ function createIndexRouter({ prisma = defaultPrisma } = {}) {
   });
 
   // Login page
-  router.get("/logg-inn", (req, res) => {
-    res.render("login", { title: "Logg inn – Jordleie.no" });
+  router.get("/logg-inn", auth.redirectIfAuthenticated, (req, res) => {
+    res.render("login", {
+      title: "Logg inn – Jordleie.no",
+      mode: "login",
+      next: auth.safeRedirect(req.query.next, "/min-bruker"),
+      error: readMessage(req.query.error),
+      success: readMessage(req.query.success),
+      authConfigured: auth.isConfigured(),
+    });
+  });
+
+  // Registration page
+  router.get("/registrer-deg", auth.redirectIfAuthenticated, (req, res) => {
+    res.render("login", {
+      title: "Registrer deg – Jordleie.no",
+      mode: "signup",
+      next: auth.safeRedirect(req.query.next, "/min-bruker"),
+      error: readMessage(req.query.error),
+      success: readMessage(req.query.success),
+      authConfigured: auth.isConfigured(),
+    });
+  });
+
+  router.post("/auth/logg-inn", async (req, res) => {
+    const nextPath = auth.safeRedirect(req.body.next || req.query.next, "/min-bruker");
+    const email = String(req.body.email || "").trim();
+    const password = String(req.body.password || "");
+
+    if (!email || !password) {
+      const params = new URLSearchParams({
+        error: "E-post og passord er påkrevd.",
+        next: nextPath,
+      });
+      return res.redirect(`/logg-inn?${params.toString()}`);
+    }
+
+    try {
+      await auth.signInWithPassword({ email, password, res });
+      return res.redirect(nextPath);
+    } catch (error) {
+      const params = new URLSearchParams({
+        error: error.message,
+        next: nextPath,
+      });
+      return res.redirect(`/logg-inn?${params.toString()}`);
+    }
+  });
+
+  router.post("/auth/registrer-deg", async (req, res) => {
+    const nextPath = auth.safeRedirect(req.body.next || req.query.next, "/min-bruker");
+    const fullName = String(req.body.fullName || "").trim();
+    const email = String(req.body.email || "").trim();
+    const password = String(req.body.password || "");
+    const confirmPassword = String(req.body.confirmPassword || "");
+
+    if (!fullName || !email || !password) {
+      const params = new URLSearchParams({
+        error: "Navn, e-post og passord er påkrevd.",
+        next: nextPath,
+      });
+      return res.redirect(`/registrer-deg?${params.toString()}`);
+    }
+
+    if (password.length < 8) {
+      const params = new URLSearchParams({
+        error: "Passordet må være minst 8 tegn langt.",
+        next: nextPath,
+      });
+      return res.redirect(`/registrer-deg?${params.toString()}`);
+    }
+
+    if (password !== confirmPassword) {
+      const params = new URLSearchParams({
+        error: "Passordene er ikke like.",
+        next: nextPath,
+      });
+      return res.redirect(`/registrer-deg?${params.toString()}`);
+    }
+
+    try {
+      const result = await auth.signUpWithPassword({ email, password, fullName, res });
+
+      if (result.requiresEmailConfirmation) {
+        const params = new URLSearchParams({
+          success: "Kontoen er opprettet. Bekreft e-posten din og logg inn.",
+          next: nextPath,
+        });
+        return res.redirect(`/logg-inn?${params.toString()}`);
+      }
+
+      return res.redirect(nextPath);
+    } catch (error) {
+      const params = new URLSearchParams({
+        error: error.message,
+        next: nextPath,
+      });
+      return res.redirect(`/registrer-deg?${params.toString()}`);
+    }
+  });
+
+  router.post("/logg-ut", async (req, res) => {
+    await auth.signOut(req, res);
+    res.redirect("/logg-inn?success=Du%20er%20logget%20ut.");
   });
 
   // Min bruker (My profile / create listing)
-  router.get("/min-bruker", (req, res) => {
-    res.render("my-profile", { title: "Min bruker" });
+  router.get("/min-bruker", auth.requireAuth, (req, res) => {
+    res.render("my-profile", {
+      title: "Min bruker",
+      user: req.currentUser,
+      success: readMessage(req.query.success),
+      error: readMessage(req.query.error),
+    });
+  });
+
+  router.post("/min-bruker", auth.requireAuth, async (req, res) => {
+    const fullName = String(req.body.fullName || "").trim();
+    const county = String(req.body.county || "").trim() || null;
+    const bio = String(req.body.bio || "").trim() || null;
+
+    if (!fullName) {
+      const params = new URLSearchParams({
+        error: "Navn er påkrevd.",
+      });
+      return res.redirect(`/min-bruker?${params.toString()}`);
+    }
+
+    try {
+      await prisma.user.update({
+        where: { id: req.currentUser.id },
+        data: {
+          fullName,
+          profile: {
+            upsert: {
+              update: {
+                county,
+                bio,
+              },
+              create: {
+                county,
+                bio,
+              },
+            },
+          },
+        },
+      });
+
+      return res.redirect("/min-bruker?success=Profilen%20er%20oppdatert.");
+    } catch (error) {
+      console.error("POST /min-bruker error:", error);
+      const params = new URLSearchParams({
+        error: "Kunne ikke oppdatere profilen.",
+      });
+      return res.redirect(`/min-bruker?${params.toString()}`);
+    }
   });
 
   // Lag annonse (Create listing)
-  router.get("/lag-annonse", (req, res) => {
-    res.render("create-listing", { title: "Lag annonse" });
+  router.get("/lag-annonse", auth.requireAuth, (req, res) => {
+    res.render("create-listing", {
+      title: "Lag annonse",
+      user: req.currentUser,
+    });
   });
 
   return router;

@@ -6,10 +6,41 @@ const { createApp, startServer } = require("../app");
 const { createIndexRouter } = require("../routes/index");
 const { createFarmRouter } = require("../routes/farms");
 
-function buildApp({ prisma, Farm }) {
+function createAuthMock({ currentUser = null, isConfigured = true } = {}) {
+  function attachCurrentUser(req, res, next) {
+    req.currentUser = currentUser;
+    res.locals.currentUser = currentUser;
+    res.locals.authConfigured = isConfigured;
+    next();
+  }
+
+  function requireAuth(req, res, next) {
+    if (currentUser) return next();
+    return res.redirect("/logg-inn?error=Du+m%C3%A5+logge+inn+for+%C3%A5+fortsette.&next=%2Fmin-bruker");
+  }
+
+  function redirectIfAuthenticated(req, res, next) {
+    if (!currentUser) return next();
+    return res.redirect("/min-bruker");
+  }
+
+  return {
+    attachCurrentUser,
+    requireAuth,
+    redirectIfAuthenticated,
+    safeRedirect: (target, fallback = "/min-bruker") => target || fallback,
+    signInWithPassword: async () => ({ user: currentUser }),
+    signUpWithPassword: async () => ({ user: currentUser, requiresEmailConfirmation: false }),
+    signOut: async () => {},
+    isConfigured: () => isConfigured,
+  };
+}
+
+function buildApp({ prisma, Farm, auth = createAuthMock() }) {
   const app = createApp({
-    indexRouter: createIndexRouter({ prisma }),
-    farmRouter: createFarmRouter({ Farm }),
+    auth,
+    indexRouter: createIndexRouter({ prisma, auth }),
+    farmRouter: createFarmRouter({ Farm, auth }),
   });
 
   app.response.render = function render(view, locals = {}) {
@@ -138,28 +169,82 @@ test("startServer creates an app, logs the port, registers signal handlers, and 
 });
 
 test("static pages and login/profile routes render the expected views", async (t) => {
-  const client = await startApp(buildApp({
+  const currentUser = {
+    id: 1,
+    email: "bonde@example.com",
+    fullName: "Bonde Bruker",
+    role: "BOTH",
+    status: "ACTIVE",
+    phone: null,
+    createdAt: new Date("2026-04-09T10:00:00Z"),
+    profile: {
+      county: "Innlandet",
+      bio: "Driver gård.",
+    },
+  };
+  const publicClient = await startApp(buildApp({
     prisma: createPrismaMock(),
     Farm: createFarmMock(),
+    auth: createAuthMock({ currentUser: null }),
+  }));
+  const privateClient = await startApp(buildApp({
+    prisma: createPrismaMock(),
+    Farm: createFarmMock(),
+    auth: createAuthMock({ currentUser }),
   }));
 
   try {
-    const cases = [
+    const publicCases = [
       ["/", "landing", "Jordleie.no – Fremtidens jordleie"],
       ["/om-jordleie", "about", "Om Jordleie.no"],
       ["/hvordan-kjope-selge", "how-it-works", "Hvordan kjøpe og selge"],
       ["/artikler", "articles", "Artikler"],
       ["/logg-inn", "login", "Logg inn – Jordleie.no"],
+      ["/registrer-deg", "login", "Registrer deg – Jordleie.no"],
+    ];
+    const privateCases = [
       ["/min-bruker", "my-profile", "Min bruker"],
       ["/lag-annonse", "create-listing", "Lag annonse"],
     ];
 
-    for (const [path, view, title] of cases) {
+    for (const [path, view, title] of publicCases) {
       await t.test(path, async () => {
-        const { response, body } = await client.request(path);
+        const { response, body } = await publicClient.request(path);
         assert.equal(response.status, 200);
         assert.equal(body.view, view);
         assert.equal(body.locals.title, title);
+      });
+    }
+
+    for (const [path, view, title] of privateCases) {
+      await t.test(path, async () => {
+        const { response, body } = await privateClient.request(path);
+        assert.equal(response.status, 200);
+        assert.equal(body.view, view);
+        assert.equal(body.locals.title, title);
+      });
+    }
+  } finally {
+    await publicClient.close();
+    await privateClient.close();
+  }
+});
+
+test("protected profile routes redirect unauthenticated users to login", async (t) => {
+  const client = await startApp(buildApp({
+    prisma: createPrismaMock(),
+    Farm: createFarmMock(),
+    auth: createAuthMock({ currentUser: null }),
+  }));
+
+  try {
+    const cases = ["/min-bruker", "/lag-annonse"];
+
+    for (const path of cases) {
+      await t.test(path, async () => {
+        const { response } = await client.request(path);
+        assert.equal(response.status, 302);
+        assert.match(response.headers.get("location"), /^\/logg-inn\?/);
       });
     }
   } finally {
@@ -477,6 +562,15 @@ test("GET /auksjoner/:id renders the shared error view on unexpected failures", 
 test("POST /auksjoner normalizes form input before creating a listing", async () => {
   const Farm = createFarmMock();
   const calls = [];
+  const currentUser = {
+    id: 10,
+    email: "ola@example.com",
+    fullName: "Ola Bonde",
+    role: "BOTH",
+    status: "ACTIVE",
+    createdAt: new Date("2026-04-09T10:00:00Z"),
+    profile: {},
+  };
   Farm.create = async (input) => {
     calls.push(input);
     return { id: 42 };
@@ -485,6 +579,7 @@ test("POST /auksjoner normalizes form input before creating a listing", async ()
   const client = await startApp(buildApp({
     prisma: createPrismaMock(),
     Farm,
+    auth: createAuthMock({ currentUser }),
   }));
 
   try {
@@ -511,6 +606,7 @@ test("POST /auksjoner normalizes form input before creating a listing", async ()
     assert.equal(response.status, 302);
     assert.equal(response.headers.get("location"), "/auksjoner/42");
     assert.deepEqual(calls, [{
+      ownerUserId: 10,
       title: "Ny gård",
       description: "Beskrivelse",
       ownerName: "Ola Bonde",
@@ -537,6 +633,15 @@ test("POST /auksjoner normalizes form input before creating a listing", async ()
 
 test("POST /auksjoner renders the error page when create fails", async () => {
   const Farm = createFarmMock();
+  const currentUser = {
+    id: 10,
+    email: "ola@example.com",
+    fullName: "Ola Bonde",
+    role: "BOTH",
+    status: "ACTIVE",
+    createdAt: new Date("2026-04-09T10:00:00Z"),
+    profile: {},
+  };
   Farm.create = async () => {
     throw new Error("create failed");
   };
@@ -544,6 +649,7 @@ test("POST /auksjoner renders the error page when create fails", async () => {
   const client = await startApp(buildApp({
     prisma: createPrismaMock(),
     Farm,
+    auth: createAuthMock({ currentUser }),
   }));
 
   try {
@@ -570,9 +676,19 @@ test("POST /auksjoner renders the error page when create fails", async () => {
 });
 
 test("POST /auksjoner/:id/bid returns 404 when the auction does not exist", async () => {
+  const currentUser = {
+    id: 12,
+    email: "kari@example.com",
+    fullName: "Kari",
+    role: "BOTH",
+    status: "ACTIVE",
+    createdAt: new Date("2026-04-09T10:00:00Z"),
+    profile: {},
+  };
   const client = await startApp(buildApp({
     prisma: createPrismaMock(),
     Farm: createFarmMock(),
+    auth: createAuthMock({ currentUser }),
   }));
 
   try {
@@ -592,6 +708,15 @@ test("POST /auksjoner/:id/bid returns 404 when the auction does not exist", asyn
 test("POST /auksjoner/:id/bid places a bid when there is no current bid yet", async () => {
   const Farm = createFarmMock();
   const calls = [];
+  const currentUser = {
+    id: 12,
+    email: "kari@example.com",
+    fullName: "Kari",
+    role: "BOTH",
+    status: "ACTIVE",
+    createdAt: new Date("2026-04-09T10:00:00Z"),
+    profile: {},
+  };
   Farm.findById = async () => ({ id: 5, currentBid: 0 });
   Farm.updateBid = async (...args) => {
     calls.push(args);
@@ -600,6 +725,7 @@ test("POST /auksjoner/:id/bid places a bid when there is no current bid yet", as
   const client = await startApp(buildApp({
     prisma: createPrismaMock(),
     Farm,
+    auth: createAuthMock({ currentUser }),
   }));
 
   try {
@@ -610,7 +736,7 @@ test("POST /auksjoner/:id/bid places a bid when there is no current bid yet", as
     const { response } = await client.request(path, init);
     assert.equal(response.status, 302);
     assert.equal(response.headers.get("location"), "/auksjoner/5");
-    assert.deepEqual(calls, [[5, 810, "Anonym"]]);
+    assert.deepEqual(calls, [[5, 810, "Kari", 12]]);
   } finally {
     await client.close();
   }
@@ -619,6 +745,15 @@ test("POST /auksjoner/:id/bid places a bid when there is no current bid yet", as
 test("POST /auksjoner/:id/bid ignores bids that are not above the current bid", async () => {
   const Farm = createFarmMock();
   let updateCalls = 0;
+  const currentUser = {
+    id: 12,
+    email: "kari@example.com",
+    fullName: "Kari",
+    role: "BOTH",
+    status: "ACTIVE",
+    createdAt: new Date("2026-04-09T10:00:00Z"),
+    profile: {},
+  };
   Farm.findById = async () => ({ id: 6, currentBid: 900 });
   Farm.updateBid = async () => {
     updateCalls += 1;
@@ -627,6 +762,7 @@ test("POST /auksjoner/:id/bid ignores bids that are not above the current bid", 
   const client = await startApp(buildApp({
     prisma: createPrismaMock(),
     Farm,
+    auth: createAuthMock({ currentUser }),
   }));
 
   try {
@@ -646,6 +782,15 @@ test("POST /auksjoner/:id/bid ignores bids that are not above the current bid", 
 
 test("POST /auksjoner/:id/bid renders the shared error view on bid failures", async () => {
   const Farm = createFarmMock();
+  const currentUser = {
+    id: 12,
+    email: "kari@example.com",
+    fullName: "Kari",
+    role: "BOTH",
+    status: "ACTIVE",
+    createdAt: new Date("2026-04-09T10:00:00Z"),
+    profile: {},
+  };
   Farm.findById = async () => ({ id: 8, currentBid: 100 });
   Farm.updateBid = async () => {
     throw new Error("bid failed");
@@ -654,6 +799,7 @@ test("POST /auksjoner/:id/bid renders the shared error view on bid failures", as
   const client = await startApp(buildApp({
     prisma: createPrismaMock(),
     Farm,
+    auth: createAuthMock({ currentUser }),
   }));
 
   try {

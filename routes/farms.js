@@ -5,8 +5,9 @@
 
 const express = require("express");
 const defaultFarm = require("../models/Farm");
+const defaultAuth = require("../lib/auth");
 
-function createFarmRouter({ Farm = defaultFarm } = {}) {
+function createFarmRouter({ Farm = defaultFarm, auth = defaultAuth } = {}) {
   const router = express.Router();
 
   // ---- GET /auksjoner – Show all farm listings with optional filters ----
@@ -74,7 +75,7 @@ function createFarmRouter({ Farm = defaultFarm } = {}) {
   });
 
   // ---- POST /auksjoner – Create a new farm listing ----
-  router.post("/", async (req, res) => {
+  router.post("/", auth.requireAuth, async (req, res) => {
     try {
       const {
         title, description, ownerName, ownerDescription,
@@ -88,7 +89,8 @@ function createFarmRouter({ Farm = defaultFarm } = {}) {
       const farm = await Farm.create({
         title,
         description,
-        ownerName,
+        ownerUserId: req.currentUser.id,
+        ownerName: req.currentUser.fullName || ownerName,
         ownerDescription: ownerDescription || null,
         municipality,
         fylke,
@@ -122,16 +124,15 @@ function createFarmRouter({ Farm = defaultFarm } = {}) {
   });
 
   // ---- POST /auksjoner/:id/bid – Place a bid ----
-  router.post("/:id/bid", async (req, res) => {
+  router.post("/:id/bid", auth.requireAuth, async (req, res) => {
     try {
       const farm = await Farm.findById(req.params.id);
       if (!farm) return res.status(404).send("Ikke funnet");
 
       const bidAmount = parseFloat(req.body.bidAmount);
-      const bidderName = req.body.bidderName || "Anonym";
 
       if (bidAmount > farm.currentBid || farm.currentBid === 0) {
-        await Farm.updateBid(farm.id, bidAmount, bidderName);
+        await Farm.updateBid(farm.id, bidAmount, req.currentUser.fullName || "Anonym", req.currentUser.id);
       }
 
       res.redirect("/auksjoner/" + farm.id);

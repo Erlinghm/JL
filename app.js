@@ -8,10 +8,15 @@ const express = require("express");
 const methodOverride = require("method-override");
 const path = require("path");
 const prisma = require("./prisma/client");
-const indexRoutes = require("./routes/index");
-const farmRoutes = require("./routes/farms");
+const defaultAuth = require("./lib/auth");
+const { createIndexRouter } = require("./routes/index");
+const { createFarmRouter } = require("./routes/farms");
 
-function createApp({ indexRouter = indexRoutes, farmRouter = farmRoutes } = {}) {
+function createApp({
+  auth = defaultAuth,
+  indexRouter = createIndexRouter({ auth }),
+  farmRouter = createFarmRouter({ auth }),
+} = {}) {
   const app = express();
 
   // ---- Middleware ----
@@ -19,6 +24,7 @@ function createApp({ indexRouter = indexRoutes, farmRouter = farmRoutes } = {}) 
   app.use(express.json());                         // Parse JSON
   app.use(methodOverride("_method"));              // Support PUT/DELETE from forms
   app.use(express.static(path.join(__dirname, "public"))); // Serve static files
+  app.use(auth.attachCurrentUser);
 
   // ---- View Engine ----
   app.set("view engine", "ejs");

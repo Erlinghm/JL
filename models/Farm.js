@@ -186,6 +186,53 @@ function createFarmModel(prisma = defaultPrisma) {
     return user;
   }
 
+  async function resolveOwnerUser(tx, { ownerUserId, ownerName, ownerDescription, fylke }) {
+    if (!ownerUserId) {
+      return ensureShadowUser(tx, {
+        fullName: ownerName,
+        role: "OWNER",
+        county: fylke,
+        bio: ownerDescription,
+        verificationType: "LANDOWNER",
+      });
+    }
+
+    return tx.user.update({
+      where: { id: Number(ownerUserId) },
+      data: {
+        fullName: String(ownerName || "").trim() || undefined,
+        profile: {
+          upsert: {
+            update: {
+              county: fylke || null,
+              bio: ownerDescription || undefined,
+            },
+            create: {
+              county: fylke || null,
+              bio: ownerDescription || null,
+            },
+          },
+        },
+      },
+      include: { profile: true },
+    });
+  }
+
+  async function resolveBidderUser(tx, { bidderUserId, bidderName, county }) {
+    if (!bidderUserId) {
+      return ensureShadowUser(tx, {
+        fullName: bidderName,
+        role: "TENANT",
+        county,
+        verificationType: "FARMER",
+      });
+    }
+
+    return tx.user.findUniqueOrThrow({
+      where: { id: Number(bidderUserId) },
+    });
+  }
+
   async function ensureCropLinks(tx, farmId, cropTypes = []) {
     const uniqueCropTypes = [...new Set((cropTypes || []).map((crop) => String(crop).trim()).filter(Boolean))];
 
@@ -245,6 +292,7 @@ function createFarmModel(prisma = defaultPrisma) {
   async function create(data) {
     const {
       cropTypes = [],
+      ownerUserId,
       title,
       description,
       ownerName,
@@ -283,12 +331,11 @@ function createFarmModel(prisma = defaultPrisma) {
     const composition = parseJson(soilComposition, DEFAULT_SOIL_COMPOSITION);
 
     const listing = await prisma.$transaction(async (tx) => {
-      const owner = await ensureShadowUser(tx, {
-        fullName: ownerName,
-        role: "OWNER",
-        county: fylke,
-        bio: ownerDescription,
-        verificationType: "LANDOWNER",
+      const owner = await resolveOwnerUser(tx, {
+        ownerUserId,
+        ownerName,
+        ownerDescription,
+        fylke,
       });
 
       const farm = await tx.farm.create({
@@ -336,7 +383,7 @@ function createFarmModel(prisma = defaultPrisma) {
     return model.findById(listing.id);
   }
 
-  async function updateBid(id, bidAmount, bidderName = "Anonym") {
+  async function updateBid(id, bidAmount, bidderName = "Anonym", bidderUserId = null) {
     const listingId = parseInt(id, 10);
     const amount = Number(bidAmount);
 
@@ -369,11 +416,10 @@ function createFarmModel(prisma = defaultPrisma) {
         throw new Error("Budet må være høyere enn gjeldende minstepris.");
       }
 
-      const bidder = await ensureShadowUser(tx, {
-        fullName: bidderName,
-        role: "TENANT",
+      const bidder = await resolveBidderUser(tx, {
+        bidderUserId,
+        bidderName,
         county: listing.farm.county,
-        verificationType: "FARMER",
       });
 
       await tx.bid.updateMany({
