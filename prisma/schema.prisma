@@ -74,7 +74,7 @@ enum ContactSubmissionStatus {
 
 model User {
   id                   Int                       @id @default(autoincrement())
-  authUserId           String?                   @unique @map("auth_user_id")
+  authUserId           String?                   @unique @db.Uuid @map("auth_user_id")
   email                String                    @unique
   passwordHash         String?
   fullName             String
@@ -83,7 +83,7 @@ model User {
   role                 UserRole                  @default(BOTH)
   status               UserStatus                @default(PENDING_VERIFICATION)
   createdAt            DateTime                  @default(now())
-  updatedAt            DateTime                  @updatedAt
+  updatedAt            DateTime                  @default(now()) @updatedAt
   profile              UserProfile?
   verifications        UserVerification[]
   ownedFarms           Farm[]                    @relation("FarmOwner")

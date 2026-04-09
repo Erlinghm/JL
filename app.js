@@ -18,6 +18,7 @@ function createApp({
   farmRouter = createFarmRouter({ auth }),
 } = {}) {
   const app = express();
+  app.set("trust proxy", 1);
 
   // ---- Middleware ----
   app.use(express.urlencoded({ extended: true })); // Parse form data

@@ -6,10 +6,20 @@ const { createApp, startServer } = require("../app");
 const { createIndexRouter } = require("../routes/index");
 const { createFarmRouter } = require("../routes/farms");
 
-function createAuthMock({ currentUser = null, isConfigured = true } = {}) {
+function createAuthMock({
+  currentUser = null,
+  isConfigured = true,
+  signUpResult = null,
+  verifyOtpResult = null,
+  onSignUp = null,
+  onVerifyOtp = null,
+} = {}) {
   function attachCurrentUser(req, res, next) {
     req.currentUser = currentUser;
+    req.authUser = currentUser ? { id: `auth-${currentUser.id}`, email: currentUser.email } : null;
     res.locals.currentUser = currentUser;
+    res.locals.authUser = req.authUser;
+    res.locals.isAuthenticated = Boolean(currentUser);
     res.locals.authConfigured = isConfigured;
     next();
   }
@@ -30,7 +40,14 @@ function createAuthMock({ currentUser = null, isConfigured = true } = {}) {
     redirectIfAuthenticated,
     safeRedirect: (target, fallback = "/min-bruker") => target || fallback,
     signInWithPassword: async () => ({ user: currentUser }),
-    signUpWithPassword: async () => ({ user: currentUser, requiresEmailConfirmation: false }),
+    signUpWithPassword: async (args) => {
+      if (onSignUp) onSignUp(args);
+      return signUpResult || { user: currentUser, requiresEmailConfirmation: false };
+    },
+    verifyOtp: async (args) => {
+      if (onVerifyOtp) onVerifyOtp(args);
+      return verifyOtpResult || { user: currentUser, requiresSignIn: false };
+    },
     signOut: async () => {},
     isConfigured: () => isConfigured,
   };
@@ -77,7 +94,7 @@ async function startApp(app) {
     });
   }
 
-  return { request, close };
+  return { request, close, origin };
 }
 
 function postForm(path, data) {
@@ -247,6 +264,95 @@ test("protected profile routes redirect unauthenticated users to login", async (
         assert.match(response.headers.get("location"), /^\/logg-inn\?/);
       });
     }
+  } finally {
+    await client.close();
+  }
+});
+
+test("POST /auth/registrer-deg passes an SSR confirmation URL to Supabase", async () => {
+  let capturedArgs = null;
+  const auth = createAuthMock({
+    signUpResult: { user: null, requiresEmailConfirmation: true },
+    onSignUp: (args) => {
+      capturedArgs = args;
+    },
+  });
+  const client = await startApp(buildApp({
+    prisma: createPrismaMock(),
+    Farm: createFarmMock(),
+    auth,
+  }));
+
+  try {
+    const { path, init } = postForm("/auth/registrer-deg", {
+      fullName: "Ola Nordmann",
+      email: "ola@example.com",
+      password: "supersecret",
+      confirmPassword: "supersecret",
+      next: "/auksjoner/2",
+    });
+
+    const { response } = await client.request(path, init);
+    assert.equal(response.status, 302);
+    assert.equal(
+      response.headers.get("location"),
+      "/logg-inn?success=Kontoen+er+opprettet.+Bekreft+e-posten+din+og+logg+inn.&next=%2Fauksjoner%2F2"
+    );
+    assert.ok(capturedArgs);
+    assert.equal(capturedArgs.emailRedirectTo, `${client.origin}/auth/confirm?next=%2Fauksjoner%2F2`);
+  } finally {
+    await client.close();
+  }
+});
+
+test("GET /auth/confirm rejects incomplete confirmation links", async () => {
+  const client = await startApp(buildApp({
+    prisma: createPrismaMock(),
+    Farm: createFarmMock(),
+  }));
+
+  try {
+    const { response } = await client.request("/auth/confirm?next=%2Fauksjoner%2F2");
+    assert.equal(response.status, 302);
+    assert.equal(
+      response.headers.get("location"),
+      "/logg-inn?error=Bekreftelseslenken+er+ugyldig+eller+mangler+data.&next=%2Fauksjoner%2F2"
+    );
+  } finally {
+    await client.close();
+  }
+});
+
+test("GET /auth/confirm verifies the token and redirects to the requested page", async () => {
+  const calls = [];
+  const auth = createAuthMock({
+    currentUser: {
+      id: 4,
+      email: "ola@example.com",
+      fullName: "Ola Nordmann",
+    },
+    verifyOtpResult: {
+      user: { id: 4, email: "ola@example.com", fullName: "Ola Nordmann" },
+      requiresSignIn: false,
+    },
+    onVerifyOtp: (args) => {
+      calls.push({ tokenHash: args.tokenHash, type: args.type });
+    },
+  });
+  const client = await startApp(buildApp({
+    prisma: createPrismaMock(),
+    Farm: createFarmMock(),
+    auth,
+  }));
+
+  try {
+    const { response } = await client.request("/auth/confirm?token_hash=abc123&type=email&next=%2Fauksjoner%2F2");
+    assert.equal(response.status, 302);
+    assert.equal(
+      response.headers.get("location"),
+      "/auksjoner/2?success=E-posten+er+bekreftet.+Du+er+n%C3%A5+logget+inn."
+    );
+    assert.deepEqual(calls, [{ tokenHash: "abc123", type: "email" }]);
   } finally {
     await client.close();
   }

@@ -11,6 +11,45 @@ function readMessage(value) {
   return value.trim() || null;
 }
 
+function appendQuery(target, params = {}) {
+  const url = new URL(target, "http://localhost");
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === null || value === undefined || value === "") return;
+    url.searchParams.set(key, String(value));
+  });
+
+  return `${url.pathname}${url.search}`;
+}
+
+function getRequestOrigin(req) {
+  const configuredOrigin = String(process.env.APP_URL || process.env.SITE_URL || "").trim();
+  if (configuredOrigin) {
+    return configuredOrigin.replace(/\/+$/, "");
+  }
+
+  const forwardedProto = String(req.headers["x-forwarded-proto"] || "")
+    .split(",")[0]
+    .trim();
+  const forwardedHost = String(req.headers["x-forwarded-host"] || "")
+    .split(",")[0]
+    .trim();
+  const host = forwardedHost || req.get("host");
+
+  if (!host) return null;
+
+  return `${forwardedProto || req.protocol || "http"}://${host}`;
+}
+
+function buildEmailConfirmationUrl(req, nextPath) {
+  const origin = getRequestOrigin(req);
+  if (!origin) return undefined;
+
+  const url = new URL("/auth/confirm", origin);
+  url.searchParams.set("next", nextPath);
+  return url.toString();
+}
+
 function createIndexRouter({ prisma = defaultPrisma, auth = defaultAuth } = {}) {
   const router = express.Router();
 
@@ -154,7 +193,13 @@ function createIndexRouter({ prisma = defaultPrisma, auth = defaultAuth } = {}) 
     }
 
     try {
-      const result = await auth.signUpWithPassword({ email, password, fullName, res });
+      const result = await auth.signUpWithPassword({
+        email,
+        password,
+        fullName,
+        emailRedirectTo: buildEmailConfirmationUrl(req, nextPath),
+        res,
+      });
 
       if (result.requiresEmailConfirmation) {
         const params = new URLSearchParams({
@@ -173,6 +218,42 @@ function createIndexRouter({ prisma = defaultPrisma, auth = defaultAuth } = {}) 
       return res.redirect(`/registrer-deg?${params.toString()}`);
     }
   });
+
+  async function handleAuthConfirmation(req, res) {
+    const nextPath = auth.safeRedirect(req.query.next, "/min-bruker");
+    const tokenHash = String(req.query.token_hash || "").trim();
+    const type = String(req.query.type || "").trim();
+
+    if (!tokenHash || !type) {
+      return res.redirect(appendQuery("/logg-inn", {
+        error: "Bekreftelseslenken er ugyldig eller mangler data.",
+        next: nextPath,
+      }));
+    }
+
+    try {
+      const result = await auth.verifyOtp({ tokenHash, type, res });
+
+      if (result.requiresSignIn) {
+        return res.redirect(appendQuery("/logg-inn", {
+          success: "E-posten er bekreftet. Logg inn for å fortsette.",
+          next: nextPath,
+        }));
+      }
+
+      return res.redirect(appendQuery(nextPath, {
+        success: "E-posten er bekreftet. Du er nå logget inn.",
+      }));
+    } catch (error) {
+      return res.redirect(appendQuery("/logg-inn", {
+        error: error.message,
+        next: nextPath,
+      }));
+    }
+  }
+
+  router.get("/auth/confirm", handleAuthConfirmation);
+  router.get("/auth/bekreft", handleAuthConfirmation);
 
   router.post("/logg-ut", async (req, res) => {
     await auth.signOut(req, res);
