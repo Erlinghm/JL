@@ -11,9 +11,7 @@ function isAdminUser(auth, user, authUser) {
     return auth.isAdminUser(user, authUser);
   }
 
-  return user?.isAdmin === true
-    || user?.role === "ADMIN"
-    || authUser?.app_metadata?.is_admin === true;
+  return user?.isAdmin === true;
 }
 
 function formToFarmInput(body, { defaultMissingMapFields = false } = {}) {

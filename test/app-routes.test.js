@@ -31,9 +31,7 @@ function createAuthMock({
   }
 
   function isAdminUser(user, authUser) {
-    return user?.isAdmin === true
-      || user?.role === "ADMIN"
-      || authUser?.app_metadata?.is_admin === true;
+    return user?.isAdmin === true;
   }
 
   function requireAdmin(req, res, next) {
@@ -310,6 +308,19 @@ test("admin routes require an administrator", async () => {
       },
     }),
   }));
+  const roleOnlyClient = await startApp(buildApp({
+    prisma: createPrismaMock(),
+    Farm: createFarmMock(),
+    auth: createAuthMock({
+      currentUser: {
+        id: 3,
+        email: "role-admin@example.com",
+        fullName: "Role Admin",
+        role: "ADMIN",
+        isAdmin: false,
+      },
+    }),
+  }));
 
   try {
     const anonymous = await anonymousClient.request("/admin/dashboard");
@@ -320,9 +331,15 @@ test("admin routes require an administrator", async () => {
     assert.equal(regular.response.status, 403);
     assert.equal(regular.body.view, "error");
     assert.equal(regular.body.locals.message, "Du har ikke tilgang til admin-panelet.");
+
+    const roleOnly = await roleOnlyClient.request("/admin/dashboard");
+    assert.equal(roleOnly.response.status, 403);
+    assert.equal(roleOnly.body.view, "error");
+    assert.equal(roleOnly.body.locals.message, "Du har ikke tilgang til admin-panelet.");
   } finally {
     await anonymousClient.close();
     await regularClient.close();
+    await roleOnlyClient.close();
   }
 });
 
