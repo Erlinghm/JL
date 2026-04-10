@@ -126,13 +126,22 @@ img { max-width: 100%; display: block; }
 .btn-nav-primary:hover { background: var(--green-mid); }
 
 /* ============================================================
-   HERO
+   HERO – Sanna.no-teknikk
    ============================================================ */
 .lp-hero {
-  padding: 0;
-  background: var(--bg);
   position: relative;
   overflow: hidden;
+  width: 100%;
+  min-height: 620px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(
+    50% 50%,
+    rgba(250, 250, 247, 0) 0%,
+    #FAFAF7 100%
+  );
+  padding: 120px 0 0;
 }
 
 /* Subtle top decorative line */
@@ -144,18 +153,45 @@ img { max-width: 100%; display: block; }
   right: 0;
   height: 3px;
   background: linear-gradient(90deg, var(--green), transparent 60%);
+  z-index: 3;
 }
 
-.lp-hero-inner {
-  max-width: var(--max-w);
-  margin: 0 auto;
+/* Sentrert tekst og CTA */
+.lp-hero-text {
   position: relative;
+  z-index: 2;
+  text-align: center;
+  max-width: 640px;
+  padding: 0 2rem 5rem;
 }
 
-.lp-hero-inner.lp-hero-triple {
-  max-width: none;
-  margin: 0;
+/* Bildewrappere – absolutt posisjonert, stikker ut på sidene */
+.lp-hero-img-left,
+.lp-hero-img-right {
+  position: absolute;
+  bottom: 0;
+  width: 700px;
+  height: 600px;
+  z-index: 1;
+  mix-blend-mode: darken;
+  pointer-events: none;
+  user-select: none;
 }
+
+.lp-hero-img-left  { left: -200px; }
+.lp-hero-img-right { right: -200px; }
+
+.lp-hero-img-left img,
+.lp-hero-img-right img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom;
+  display: block;
+}
+
+/* Speilvend høyre bilde */
+.lp-hero-img-right img { transform: scaleX(-1); }
 
 .lp-hero-eyebrow {
   display: inline-flex;
@@ -177,7 +213,6 @@ img { max-width: 100%; display: block; }
   line-height: 1.04;
   letter-spacing: -0.035em;
   color: var(--text);
-  max-width: 700px;
   margin-bottom: 24px;
 }
 
@@ -190,61 +225,15 @@ img { max-width: 100%; display: block; }
   font-size: 1.12rem;
   color: var(--text-mid);
   max-width: 500px;
+  margin: 0 auto 40px;
   line-height: 1.7;
-  margin-bottom: 40px;
 }
 
 .lp-hero-ctas {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
-}
-
-/* Three-column hero layout */
-.lp-hero-triple {
-  display: grid;
-  grid-template-columns: 1fr 1.4fr 1fr;
-  gap: 0;
-  align-items: end;
-  min-height: 620px;
-  max-width: none;
-  margin: 0;
-}
-
-.lp-hero-text {
-  min-width: 0;
-  text-align: center;
-  padding: 80px 48px 80px;
-}
-
-.lp-hero-text .lp-hero-sub {
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.lp-hero-text .lp-hero-ctas {
   justify-content: center;
-}
-
-.lp-hero-image {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  overflow: hidden;
-  height: 100%;
-}
-
-.lp-hero-image img {
-  width: 100%;
-  height: auto;
-  max-height: 100%;
-  object-fit: contain;
-  object-position: center bottom;
-  display: block;
-}
-
-.lp-hero-image--mirrored img {
-  transform: scaleX(-1);
 }
 
 .btn-primary {
@@ -2054,14 +2043,225 @@ body.has-sidebar {
 .lp-benefits-col h3 svg { flex-shrink: 0; }
 
 /* ============================================================
+   SLIK FUNGERER DET – Spine + alternating body layout
+   ============================================================ */
+.how-section {
+  width: 100%;
+  padding: 100px 2rem;
+  background-color: #faf8f3;
+}
+
+.how-inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.how-heading {
+  font-size: 2.2rem;
+  font-weight: 600;
+  color: #1f2223;
+  text-align: center;
+  margin: 0 0 60px;
+}
+
+/* Container for all entries */
+.how-entries {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* Desktop: [media] [spine] [text]  — spine in centre */
+.how-entry {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  min-height: 320px;
+}
+
+/* Step 02: row-reverse → [text] [spine] [media] */
+.how-entry--flip {
+  flex-direction: row-reverse;
+}
+
+/* Centre spine: number at top, bar below */
+.how-entry-spine {
+  width: 100px;
+  flex-shrink: 0;
+  align-self: stretch;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 32px;
+  position: relative;
+}
+
+/* Bar starts below the number */
+.how-entry-spine::before {
+  content: '';
+  position: absolute;
+  top: 100px;
+  bottom: 0;
+  left: calc(50% - 1px);
+  width: 2px;
+  background: var(--green);
+}
+
+/* Number badge */
+.how-marker {
+  font-size: 52px;
+  font-weight: 700;
+  color: var(--green);
+  line-height: 1;
+  text-align: center;
+  background: #faf8f3;
+  padding: 0 8px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Image side */
+.how-entry-media {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 32px;
+}
+
+/* Constrain image — no stretching */
+.how-img {
+  width: 100%;
+  max-width: 360px;
+  height: 240px;
+  object-fit: cover;
+  border-radius: 12px;
+  display: block;
+  flex-shrink: 0;
+}
+
+/* Text side */
+.how-entry-text {
+  flex: 1;
+  padding: 32px;
+}
+
+.how-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #1f2223;
+  margin: 0 0 16px;
+}
+
+.how-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.how-list li {
+  font-size: 0.95rem;
+  color: #555;
+  line-height: 1.6;
+  padding-left: 1.4rem;
+  position: relative;
+}
+
+.how-list li::before {
+  content: "→";
+  position: absolute;
+  left: 0;
+  color: var(--green);
+}
+
+/* btn-register – varm brun jordtone */
+.btn-register {
+  background-color: #8B5E3C;
+  color: #ffffff;
+  padding: 14px 32px;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  transition: background-color 0.2s ease;
+}
+
+.btn-register:hover {
+  background-color: #6e4a2e;
+  color: #ffffff;
+}
+
+/* ============================================================
    RESPONSIVE
    ============================================================ */
 @media (max-width: 960px) {
   .lp-nav-links { display: none; }
 
+  /* How it works – tablet/mobile: spine moves to left */
+  .how-entry,
+  .how-entry--flip {
+    display: grid;
+    grid-template-columns: 54px 1fr;
+    grid-template-rows: auto auto;
+    flex-direction: unset;
+    min-height: auto;
+    align-items: start;
+  }
+
+  .how-entry-spine {
+    grid-column: 1;
+    grid-row: 1 / 3;
+    width: 54px;
+    align-self: stretch;
+    padding-top: 20px;
+  }
+
+  .how-entry-spine::before {
+    top: 72px;
+  }
+
+  .how-entry-media {
+    grid-column: 2;
+    grid-row: 1;
+    padding: 20px 16px 8px 16px;
+    justify-content: flex-start;
+  }
+
+  .how-entry-text {
+    grid-column: 2;
+    grid-row: 2;
+    padding: 0 16px 28px 16px;
+  }
+
+  .how-img {
+    max-width: 100%;
+    height: 200px;
+  }
+
+  .how-marker { font-size: 36px; }
+  .how-title { font-size: 1.2rem; }
+
   .lp-hero-split {
     grid-template-columns: 1fr;
     gap: 40px;
+  }
+
+  /* Trekk bildene lengre inn på nettbrett */
+  .lp-hero-img-left  { left: -300px; width: 550px; }
+  .lp-hero-img-right { right: -300px; width: 550px; }
+
+  .lp-hero-text {
+    max-width: 100%;
+    padding: 0 32px 4rem;
   }
 
   .lp-process-grid,
@@ -2072,6 +2272,18 @@ body.has-sidebar {
   .lp-comparison-grid,
   .lp-benefits-grid {
     grid-template-columns: 1fr;
+  }
+
+  /* Auctions preview: 2 columns on tablet */
+  .lp-auctions-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Om oss + kontakt: single column */
+  .lp-om-grid,
+  .lp-kontakt-grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
   }
 
   .lp-footer-inner {
@@ -2102,11 +2314,35 @@ body.has-sidebar {
 
 @media (max-width: 620px) {
   .lp-nav { padding: 0 20px; }
-  .lp-nav-inner { gap: 16px; }
+  .lp-nav-inner { gap: 12px; }
+  /* Hide secondary nav button on small screens */
+  .btn-nav-ghost { display: none; }
 
-  .lp-hero,
+  /* How it works – mobil */
+  .how-section { padding: 60px 1rem; }
+  .how-heading { font-size: 1.6rem; }
+  .how-marker { font-size: 36px; }
+  .how-title { font-size: 1.2rem; }
+  .how-entry,
+  .how-entry--flip { grid-template-columns: 40px 1fr; }
+  .how-entry-spine { width: 40px; }
+  .how-section { padding: 60px 0; }
+  .how-heading { font-size: 1.6rem; }
+
   .lp-section,
   .lp-cta { padding-left: 20px; padding-right: 20px; }
+
+  /* Hero på mobil: skjul bilder, forenklet layout */
+  .lp-hero-img-left,
+  .lp-hero-img-right { display: none; }
+
+  .lp-hero {
+    min-height: auto;
+    padding: 60px 0 0;
+    background: #FAFAF7;
+  }
+
+  .lp-hero-text { padding: 0 24px 3rem; }
 
   .lp-stats { padding: 20px; }
   .lp-stats-inner { flex-wrap: wrap; gap: 16px; }
@@ -2119,6 +2355,16 @@ body.has-sidebar {
 
   .lp-process-grid,
   .lp-testimonials-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Auctions preview: single column on mobile */
+  .lp-auctions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Contact form: collapse 2-col row to single column */
+  .lp-form-row {
     grid-template-columns: 1fr;
   }
 

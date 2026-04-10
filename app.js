@@ -7,59 +7,53 @@ require("dotenv").config();
 const express = require("express");
 const methodOverride = require("method-override");
 const path = require("path");
-const prisma = require("./prisma/client");
-const defaultAuth = require("./lib/auth");
-const { createIndexRouter } = require("./routes/index");
-const { createFarmRouter } = require("./routes/farms");
-const { createAdminRouter } = require("./routes/admin");
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
 
-function createApp({
-  auth = defaultAuth,
-  indexRouter = createIndexRouter({ auth }),
-  farmRouter = createFarmRouter({ auth }),
-  adminRouter = createAdminRouter({ auth }),
-} = {}) {
-  const app = express();
-  app.set("trust proxy", 1);
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-  // ---- Middleware ----
-  app.use(express.urlencoded({ extended: true })); // Parse form data
-  app.use(express.json());                         // Parse JSON
-  app.use(methodOverride("_method"));              // Support PUT/DELETE from forms
-  app.use(express.static(path.join(__dirname, "public"))); // Serve static files
-  app.use(auth.attachCurrentUser);
+// ---- Middleware ----
+app.use(express.urlencoded({ extended: true })); // Parse form data
+app.use(express.json());                          // Parse JSON
+app.use(methodOverride("_method"));              // Support PUT/DELETE from forms
+app.use(express.static(path.join(__dirname, "public"))); // Serve static files
 
-  // ---- View Engine ----
-  app.set("view engine", "ejs");
-  app.set("views", path.join(__dirname, "views"));
+// ---- View Engine ----
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
 
-  // ---- Routes ----
-  app.use("/", indexRouter);
-  app.use("/auksjoner", farmRouter);
-  app.use("/admin", adminRouter);
+// ---- Session ----
+const session = require("express-session");
+app.use(session({
+  secret: process.env.SESSION_SECRET || "midlertidig-hemmelighet",
+  resave: false,
+  saveUninitialized: false,
+}));
 
-  // ---- 404 Handler ----
-  app.use((req, res) => {
-    res.status(404).render("404", { title: "Side ikke funnet" });
-  });
+// ---- Routes ----
+const indexRoutes = require("./routes/index");
+const farmRoutes  = require("./routes/farms");
+const adminRoutes = require("./routes/admin");
 
-  return app;
-}
+app.use("/", indexRoutes);
+app.use("/auksjoner", farmRoutes);
+app.use("/admin", adminRoutes);
 
-function startServer({ app = createApp(), port = process.env.PORT || 3000 } = {}) {
-  const server = app.listen(port, () => {
-    console.log(`🚜 Jordleie.no kjører på http://localhost:${port}`);
-  });
+// ---- 404 Handler ----
+app.use((req, res) => {
+  res.status(404).render("404", { title: "Side ikke funnet" });
+});
 
-  async function shutdown() {
-    await prisma.$disconnect();
-    server.close(() => process.exit(0));
-  }
+// ---- Start Server ----
+const server = app.listen(PORT, () => {
+  console.log(`🚜 Jordleie.no kjører på http://localhost:${PORT}`);
+});
 
-  process.on("SIGINT", shutdown);
-  process.on("SIGTERM", shutdown);
-
-  return { app, server, shutdown };
+// ---- Graceful shutdown – close Prisma connection ----
+async function shutdown() {
+  await prisma.$disconnect();
+  server.close(() => process.exit(0));
 }
 
 if (require.main === module) {
