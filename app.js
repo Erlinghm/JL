@@ -11,11 +11,13 @@ const prisma = require("./prisma/client");
 const defaultAuth = require("./lib/auth");
 const { createIndexRouter } = require("./routes/index");
 const { createFarmRouter } = require("./routes/farms");
+const { createAdminRouter } = require("./routes/admin");
 
 function createApp({
   auth = defaultAuth,
   indexRouter = createIndexRouter({ auth }),
   farmRouter = createFarmRouter({ auth }),
+  adminRouter = createAdminRouter({ auth }),
 } = {}) {
   const app = express();
   app.set("trust proxy", 1);
@@ -34,6 +36,7 @@ function createApp({
   // ---- Routes ----
   app.use("/", indexRouter);
   app.use("/auksjoner", farmRouter);
+  app.use("/admin", adminRouter);
 
   // ---- 404 Handler ----
   app.use((req, res) => {
