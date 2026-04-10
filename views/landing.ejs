@@ -92,147 +92,63 @@
 
       <h2 class="how-heading">Slik fungerer det</h2>
 
-      <!-- FANER -->
-      <div class="how-tabs">
-        <button class="how-tab how-tab--active" data-tab="grunneier">Grunneier</button>
-        <button class="how-tab" data-tab="leietaker">Leietaker</button>
-      </div>
+      <div class="how-entries">
 
-      <!-- GRUNNEIER-INNHOLD -->
-      <div class="how-content" id="how-grunneier">
-
-        <div class="how-marker-row">
-          <div class="how-left-space"></div>
-          <div class="how-marker-col"><div class="how-marker">01</div></div>
-          <div class="how-right-space"></div>
-        </div>
-
-        <div class="how-step">
-          <div class="how-step-side how-step-side--left">
-            <img src="/images/sfd_1.png" alt="Registrer gården din" class="how-img">
+        <!-- 01: bilde venstre | spine | tekst høyre -->
+        <div class="how-entry">
+          <div class="how-entry-media">
+            <img class="how-img" src="/images/sfd_1.png" alt="Registrer deg">
           </div>
-          <div class="how-step-line"></div>
-          <div class="how-step-side how-step-side--right">
-            <h3 class="how-title">Registrer gården din</h3>
+          <div class="how-entry-spine">
+            <div class="how-marker">01</div>
+          </div>
+          <div class="how-entry-text">
+            <h3 class="how-title">Registrer deg</h3>
             <ul class="how-list">
               <li>Opprett en gratis konto på Jordleie.no</li>
-              <li>Legg inn informasjon om eiendommen din</li>
-              <li>Last opp bilder og beskrivelse av arealet</li>
+              <li>Legg inn informasjon om deg og din eiendom</li>
+              <li>Vi verifiserer identitet og gårdsbruk for trygg handel</li>
             </ul>
           </div>
         </div>
 
-        <div class="how-marker-row">
-          <div class="how-left-space"></div>
-          <div class="how-marker-col"><div class="how-marker">02</div></div>
-          <div class="how-right-space"></div>
-        </div>
-
-        <div class="how-step how-step--reverse">
-          <div class="how-step-side how-step-side--left">
-            <h3 class="how-title">Sett opp auksjonen</h3>
+        <!-- 02: tekst venstre | spine | bilde høyre (row-reverse) -->
+        <div class="how-entry how-entry--flip">
+          <div class="how-entry-media">
+            <img class="how-img" src="/images/sfd_2.png" alt="Finn eller legg ut">
+          </div>
+          <div class="how-entry-spine">
+            <div class="how-marker">02</div>
+          </div>
+          <div class="how-entry-text">
+            <h3 class="how-title">Finn eller legg ut</h3>
             <ul class="how-list">
-              <li>Velg startpris per dekar</li>
-              <li>Sett auksjonens varighet</li>
-              <li>Spesifiser leiebetingelser og periode</li>
+              <li>Søk etter ledige arealer i ditt fylke</li>
+              <li>Eller publiser din jord med kart og auksjonsvilkår</li>
+              <li>Velg startpris, varighet og leiebetingelser</li>
             </ul>
           </div>
-          <div class="how-step-line"></div>
-          <div class="how-step-side how-step-side--right">
-            <img src="/images/sfd_2.png" alt="Sett opp auksjonen" class="how-img">
-          </div>
         </div>
 
-        <div class="how-marker-row">
-          <div class="how-left-space"></div>
-          <div class="how-marker-col"><div class="how-marker">03</div></div>
-          <div class="how-right-space"></div>
-        </div>
-
-        <div class="how-step">
-          <div class="how-step-side how-step-side--left">
-            <img src="/images/sfd_3.png" alt="Inngå leieavtale" class="how-img">
+        <!-- 03: bilde venstre | spine | tekst høyre -->
+        <div class="how-entry">
+          <div class="how-entry-media">
+            <img class="how-img" src="/images/sfd_3.png" alt="Bud og avtale">
           </div>
-          <div class="how-step-line"></div>
-          <div class="how-step-side how-step-side--right">
-            <h3 class="how-title">Inngå leieavtale</h3>
+          <div class="how-entry-spine">
+            <div class="how-marker">03</div>
+          </div>
+          <div class="how-entry-text">
+            <h3 class="how-title">Bud og avtale</h3>
             <ul class="how-list">
-              <li>Motta bud fra interesserte leietakere</li>
+              <li>Legg inn bud og følg auksjonen i sanntid</li>
               <li>Høyeste bud vinner når auksjonen avsluttes</li>
-              <li>Leieavtale inngås direkte mellom partene</li>
+              <li>Inngå digital leieavtale direkte mellom partene</li>
             </ul>
           </div>
         </div>
 
-      </div><!-- /how-grunneier -->
-
-      <!-- LEIETAKER-INNHOLD -->
-      <div class="how-content how-content--hidden" id="how-leietaker">
-
-        <div class="how-marker-row">
-          <div class="how-left-space"></div>
-          <div class="how-marker-col"><div class="how-marker">01</div></div>
-          <div class="how-right-space"></div>
-        </div>
-
-        <div class="how-step">
-          <div class="how-step-side how-step-side--left">
-            <img src="/images/sfd_1.png" alt="Opprett konto" class="how-img">
-          </div>
-          <div class="how-step-line"></div>
-          <div class="how-step-side how-step-side--right">
-            <h3 class="how-title">Opprett konto</h3>
-            <ul class="how-list">
-              <li>Registrer deg gratis på Jordleie.no</li>
-              <li>Velg at du er leietaker</li>
-              <li>Fullfør profilen med kontaktinformasjon</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="how-marker-row">
-          <div class="how-left-space"></div>
-          <div class="how-marker-col"><div class="how-marker">02</div></div>
-          <div class="how-right-space"></div>
-        </div>
-
-        <div class="how-step how-step--reverse">
-          <div class="how-step-side how-step-side--left">
-            <h3 class="how-title">Finn areal du vil leie</h3>
-            <ul class="how-list">
-              <li>Bla gjennom aktive auksjoner</li>
-              <li>Filtrer på fylke, størrelse og jordtype</li>
-              <li>Les om arealet og eieren</li>
-            </ul>
-          </div>
-          <div class="how-step-line"></div>
-          <div class="how-step-side how-step-side--right">
-            <img src="/images/sfd_2.png" alt="Finn areal" class="how-img">
-          </div>
-        </div>
-
-        <div class="how-marker-row">
-          <div class="how-left-space"></div>
-          <div class="how-marker-col"><div class="how-marker">03</div></div>
-          <div class="how-right-space"></div>
-        </div>
-
-        <div class="how-step">
-          <div class="how-step-side how-step-side--left">
-            <img src="/images/sfd_3.png" alt="Gi bud" class="how-img">
-          </div>
-          <div class="how-step-line"></div>
-          <div class="how-step-side how-step-side--right">
-            <h3 class="how-title">Gi bud og vinn arealet</h3>
-            <ul class="how-list">
-              <li>Legg inn budet ditt på auksjonen</li>
-              <li>Følg med — andre kan by høyere</li>
-              <li>Vinner du: ta kontakt med grunneier for avtale</li>
-            </ul>
-          </div>
-        </div>
-
-      </div><!-- /how-leietaker -->
+      </div><!-- /how-entries -->
 
     </div><!-- /how-inner -->
   </section>
@@ -655,7 +571,7 @@
     <h2>Klar til å komme i gang?</h2>
     <p>Registrer deg gratis og legg ut ditt første areal – eller finn jord i ditt fylke i dag.</p>
     <div class="lp-cta-actions">
-      <a href="/lag-annonse" class="btn-cta-primary">Legg ut jord</a>
+      <a href="/lag-annonse" class="btn-register">Registrer deg</a>
       <a href="/logg-inn" class="btn-cta-outline">Finn jord til leie</a>
     </div>
   </section>

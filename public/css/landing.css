@@ -2043,7 +2043,7 @@ body.has-sidebar {
 .lp-benefits-col h3 svg { flex-shrink: 0; }
 
 /* ============================================================
-   SLIK FUNGERER DET – Vertikal tidslinje med faner
+   SLIK FUNGERER DET – Spine + alternating body layout
    ============================================================ */
 .how-section {
   width: 100%;
@@ -2057,7 +2057,6 @@ body.has-sidebar {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0;
 }
 
 .how-heading {
@@ -2065,127 +2064,89 @@ body.has-sidebar {
   font-weight: 600;
   color: #1f2223;
   text-align: center;
-  margin: 0 0 40px;
+  margin: 0 0 60px;
 }
 
-/* Faner */
-.how-tabs {
+/* Container for all entries */
+.how-entries {
   display: flex;
-  gap: 8px;
-  margin-bottom: 60px;
-  background: #ede9e0;
-  padding: 6px;
-  border-radius: 100px;
-}
-
-.how-tab {
-  padding: 10px 28px;
-  border: none;
-  background: transparent;
-  border-radius: 100px;
-  font-size: 1rem;
-  font-weight: 500;
-  color: #666;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  font-family: inherit;
-}
-
-.how-tab--active {
-  background: #ffffff;
-  color: #1f2223;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.12);
-}
-
-/* Innhold */
-.how-content {
+  flex-direction: column;
   width: 100%;
 }
 
-.how-content--hidden {
-  display: none;
-}
-
-/* Markør-rad (01 / 02 / 03 på linjen) */
-.how-marker-row {
+/* Desktop: [media] [spine] [text]  — spine in centre */
+.how-entry {
   display: flex;
   flex-direction: row;
-  width: 100%;
   align-items: center;
+  min-height: 320px;
 }
 
-.how-left-space,
-.how-right-space {
-  flex: 1;
-  height: 40px;
+/* Step 02: row-reverse → [text] [spine] [media] */
+.how-entry--flip {
+  flex-direction: row-reverse;
 }
 
-.how-left-space {
-  border-right: 2px solid var(--green);
-}
-
-.how-marker-col {
+/* Centre spine: number + continuous vertical line */
+.how-entry-spine {
+  width: 100px;
+  flex-shrink: 0;
+  align-self: stretch;
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
 
+.how-entry-spine::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(50% - 1px);
+  width: 2px;
+  background: var(--green);
+}
+
+/* Number badge */
 .how-marker {
   font-size: 52px;
-  font-weight: 400;
+  font-weight: 700;
   color: var(--green);
   line-height: 1;
-  min-width: 80px;
   text-align: center;
   background: #faf8f3;
-  padding: 0 12px;
+  padding: 6px 8px;
   position: relative;
   z-index: 1;
 }
 
-/* Steg-rad */
-.how-step {
-  display: flex;
-  flex-direction: row;
-  align-items: stretch;
-  width: 100%;
-  gap: 0;
-  min-height: 320px;
-}
-
-.how-step--reverse .how-step-side--left { order: 3; }
-.how-step--reverse .how-step-line       { order: 2; }
-.how-step--reverse .how-step-side--right { order: 1; }
-
-.how-step-side {
+/* Image side */
+.how-entry-media {
   flex: 1;
   display: flex;
+  justify-content: center;
   align-items: center;
-  padding: 40px;
+  padding: 32px;
 }
 
-.how-step-side--left  { justify-content: flex-end; }
-.how-step-side--right { justify-content: flex-start; }
-
-/* Den kontinuerlige vertikale linjen */
-.how-step-line {
-  width: 2px;
-  background-color: var(--green);
-  flex-shrink: 0;
-  margin: -1px 39px;
-}
-
-/* Bilde */
+/* Constrain image — no stretching */
 .how-img {
   width: 100%;
-  max-width: 420px;
-  height: 300px;
+  max-width: 360px;
+  height: 240px;
   object-fit: cover;
   border-radius: 12px;
   display: block;
+  flex-shrink: 0;
 }
 
-/* Tekst */
+/* Text side */
+.how-entry-text {
+  flex: 1;
+  padding: 32px;
+}
+
 .how-title {
   font-size: 1.4rem;
   font-weight: 600;
@@ -2217,26 +2178,70 @@ body.has-sidebar {
   color: var(--green);
 }
 
+/* btn-register – varm brun jordtone */
+.btn-register {
+  background-color: #8B5E3C;
+  color: #ffffff;
+  padding: 14px 32px;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  transition: background-color 0.2s ease;
+}
+
+.btn-register:hover {
+  background-color: #6e4a2e;
+  color: #ffffff;
+}
+
 /* ============================================================
    RESPONSIVE
    ============================================================ */
 @media (max-width: 960px) {
   .lp-nav-links { display: none; }
 
-  /* How it works – nettbrett: vertikal layout */
-  .how-step,
-  .how-step--reverse {
-    flex-direction: column;
+  /* How it works – tablet/mobile: spine moves to left */
+  .how-entry,
+  .how-entry--flip {
+    display: grid;
+    grid-template-columns: 54px 1fr;
+    grid-template-rows: auto auto;
+    flex-direction: unset;
     min-height: auto;
-    gap: 24px;
+    align-items: start;
   }
-  .how-step--reverse .how-step-side--left,
-  .how-step--reverse .how-step-line,
-  .how-step--reverse .how-step-side--right { order: unset; }
-  .how-step-side--left,
-  .how-step-side--right { justify-content: flex-start; padding: 0 0 0 20px; }
-  .how-step-line { width: 40px; height: 2px; margin: 0 0 0 20px; }
-  .how-left-space { border-right: none; border-bottom: 2px solid var(--green); }
+
+  .how-entry-spine {
+    grid-column: 1;
+    grid-row: 1 / 3;
+    width: 54px;
+    align-self: stretch;
+  }
+
+  .how-entry-media {
+    grid-column: 2;
+    grid-row: 1;
+    padding: 20px 16px 8px 16px;
+    justify-content: flex-start;
+  }
+
+  .how-entry-text {
+    grid-column: 2;
+    grid-row: 2;
+    padding: 0 16px 28px 16px;
+  }
+
+  .how-img {
+    max-width: 100%;
+    height: 200px;
+  }
+
+  .how-marker { font-size: 36px; }
+  .how-title { font-size: 1.2rem; }
 
   .lp-hero-split {
     grid-template-columns: 1fr;
@@ -2311,8 +2316,11 @@ body.has-sidebar {
   .how-heading { font-size: 1.6rem; }
   .how-marker { font-size: 36px; }
   .how-title { font-size: 1.2rem; }
-  .how-tab { padding: 8px 18px; font-size: 0.9rem; }
-  .how-img { max-width: 100%; height: 220px; }
+  .how-entry,
+  .how-entry--flip { grid-template-columns: 40px 1fr; }
+  .how-entry-spine { width: 40px; }
+  .how-section { padding: 60px 0; }
+  .how-heading { font-size: 1.6rem; }
 
   .lp-section,
   .lp-cta { padding-left: 20px; padding-right: 20px; }
