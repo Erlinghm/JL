@@ -5,7 +5,7 @@ const session = require("express-session");
 const prismaClient = require("../prisma/client");
 const { createApp, startServer } = require("../app");
 const { createIndexRouter } = require("../routes/index");
-const { createBankIdRouter } = require("../routes/bankid");
+const { createBankIdRedirect, createBankIdRouter } = require("../routes/bankid");
 const { createFarmRouter } = require("../routes/farms");
 const { createAdminRouter } = require("../routes/admin");
 
@@ -202,6 +202,24 @@ function createBankIdRedirectMock(claims) {
     },
   };
 }
+
+test("createBankIdRedirect includes configured BankID app login hint", () => {
+  const redirect = createBankIdRedirect({
+    domain: "test.idura.example",
+    clientID: "urn:test:client",
+    clientSecret: "secret",
+    acrValues: "urn:grn:authn:no:bankid:substantial",
+    loginHint: "BIS",
+  });
+
+  const options = redirect.options.beforeAuthorize({}, { scope: "openid" });
+
+  assert.deepEqual(options, {
+    scope: "openid",
+    acr_values: "urn:grn:authn:no:bankid:substantial",
+    login_hint: "BIS",
+  });
+});
 
 function createFarmMock() {
   return {

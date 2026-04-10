@@ -25,6 +25,7 @@ function getBankIdConfig(env = process.env) {
     clientID: env.IDURA_CLIENT_ID,
     clientSecret: env.IDURA_CLIENT_SECRET,
     acrValues: env.IDURA_ACR_VALUES || DEFAULT_ACR_VALUES,
+    loginHint: env.IDURA_LOGIN_HINT || null,
   };
 }
 
@@ -40,10 +41,16 @@ function createBankIdRedirect(config = getBankIdConfig()) {
     redirectUri: BANKID_VERIFY_PATH,
     postLogoutRedirectUri: "/min-bruker",
     beforeAuthorize(req, options) {
-      return {
+      const authorizeOptions = {
         ...options,
         acr_values: config.acrValues,
       };
+
+      if (config.loginHint) {
+        authorizeOptions.login_hint = config.loginHint;
+      }
+
+      return authorizeOptions;
     },
   });
 }
