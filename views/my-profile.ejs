@@ -82,13 +82,44 @@
       </div>
 
       <div class="form-section">
-        <div class="form-section-title" style="display:flex;align-items:center;gap:8px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Neste steg</div>
-        <div style="display:grid; gap:12px;">
-          <a href="/lag-annonse" class="btn btn-primary" style="justify-content:center;">Opprett ny annonse</a>
-          <a href="/auksjoner" class="btn btn-outline" style="justify-content:center;">Utforsk auksjoner</a>
+        <div class="form-section-title" style="display:flex;align-items:center;gap:8px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Identitetsverifisering
         </div>
-        <div style="margin-top:18px; font-size:0.88rem; color:var(--text-mid); line-height:1.6;">
-          Brukerprofilen er nå koblet til Supabase Auth. Innloggingen skjer via Supabase, mens denne siden leser og oppdaterer den lokale `User`-profilen.
+
+        <%
+          const identityVerification = user.verifications && user.verifications.find(v => v.type === "IDENTITY");
+          const isVerified = identityVerification && identityVerification.status === "VERIFIED";
+        %>
+
+        <% if (isVerified) { %>
+          <div style="display:flex; align-items:center; gap:12px; padding:16px; border-radius:12px; background:#eef8eb; border:1px solid #c9dfc2;">
+            <div style="flex-shrink:0; width:36px; height:36px; border-radius:50%; background:#2a7a35; display:flex; align-items:center; justify-content:center;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div>
+              <div style="font-weight:700; color:#1e5c26; font-size:0.95rem;">Identitet bekreftet med BankID</div>
+              <div style="font-size:0.8rem; color:#2a7a35; margin-top:2px;">
+                Verifisert <%= identityVerification.reviewedAt ? new Date(identityVerification.reviewedAt).toLocaleDateString("no-NO") : "" %>
+              </div>
+            </div>
+          </div>
+        <% } else { %>
+          <p style="font-size:0.88rem; color:var(--text-mid); line-height:1.6; margin-bottom:16px;">
+            Verifiser identiteten din med BankID for å by på auksjoner og inngå leieavtaler.
+          </p>
+          <a href="/auth/bankid/start" class="btn btn-primary" style="justify-content:center; background:#00427a; border-color:#00427a; display:flex; align-items:center; gap:8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Verifiser med BankID
+          </a>
+          <div style="margin-top:10px; font-size:0.78rem; color:var(--text-light); line-height:1.5;">
+            Du blir sendt til BankID og tilbake hit etterpå.
+          </div>
+        <% } %>
+
+        <div style="margin-top:22px; border-top:1px solid var(--border); padding-top:18px; display:grid; gap:12px;">
+          <a href="/lag-annonse" class="btn btn-outline" style="justify-content:center;">Opprett ny annonse</a>
+          <a href="/auksjoner" class="btn btn-outline" style="justify-content:center;">Utforsk auksjoner</a>
         </div>
       </div>
     </div>

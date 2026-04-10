@@ -261,10 +261,16 @@ function createIndexRouter({ prisma = defaultPrisma, auth = defaultAuth } = {}) 
   });
 
   // Min bruker (My profile / create listing)
-  router.get("/min-bruker", auth.requireAuth, (req, res) => {
+  router.get("/min-bruker", auth.requireAuth, async (req, res) => {
+    // Last inn verifications separat så profilsiden kan vise BankID-status
+    const userWithVerifications = await prisma.user.findUnique({
+      where: { id: req.currentUser.id },
+      include: { profile: true, verifications: true },
+    });
+
     res.render("my-profile", {
       title: "Min bruker",
-      user: req.currentUser,
+      user: userWithVerifications || req.currentUser,
       success: readMessage(req.query.success),
       error: readMessage(req.query.error),
     });
