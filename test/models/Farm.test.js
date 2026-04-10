@@ -492,6 +492,163 @@ test("create infers ACTIVE when the auction window is currently open", async () 
   assert.deepEqual(createdStatuses, ["ACTIVE"]);
 });
 
+test("update persists listing, farm, owner, parcel, and crop changes", async () => {
+  const calls = {
+    userUpdate: [],
+    farmUpdate: [],
+    parcelUpdate: [],
+    cropDeleteMany: [],
+    cropTypeUpsert: [],
+    farmCropTypeUpsert: [],
+    listingUpdate: [],
+  };
+
+  const tx = {
+    listing: {
+      findUnique: async () => ({
+        id: 44,
+        farmId: 22,
+        ownerUserId: 11,
+        currentBidPerDekarYear: 710,
+        publishedAt: new Date("2026-04-01T00:00:00.000Z"),
+        farm: {
+          id: 22,
+          centroidLat: 59.35,
+          centroidLng: 10.85,
+          parcels: [{
+            id: 33,
+            polygonJson: [[59.35, 10.85]],
+            soilCompositionJson: { leire: 35, sand: 25, silt: 30, organisk: 10 },
+          }],
+        },
+      }),
+      update: async (args) => {
+        calls.listingUpdate.push(args);
+      },
+    },
+    user: {
+      update: async (args) => {
+        calls.userUpdate.push(args);
+        return { id: 11, profile: {} };
+      },
+    },
+    farm: {
+      update: async (args) => {
+        calls.farmUpdate.push(args);
+      },
+    },
+    farmParcel: {
+      update: async (args) => {
+        calls.parcelUpdate.push(args);
+      },
+    },
+    farmCropType: {
+      deleteMany: async (args) => {
+        calls.cropDeleteMany.push(args);
+      },
+      upsert: async (args) => {
+        calls.farmCropTypeUpsert.push(args);
+      },
+    },
+    cropType: {
+      upsert: async (args) => {
+        calls.cropTypeUpsert.push(args);
+        return { id: calls.cropTypeUpsert.length };
+      },
+    },
+  };
+
+  const prisma = {
+    $transaction: async (callback) => callback(tx),
+    listing: {
+      findUnique: async () => buildListing({ id: 44, status: "UPCOMING" }),
+    },
+  };
+
+  const model = createFarmModel(prisma);
+  const result = await model.update("44", {
+    title: "Oppdatert gård",
+    description: "Ny tekst",
+    ownerName: "Kari",
+    ownerDescription: "Eier",
+    municipality: "Stange",
+    fylke: "Innlandet",
+    address: "",
+    sizeDekar: "120",
+    soilType: "",
+    soilQuality: "",
+    auctionStart: "3026-05-01",
+    auctionEnd: "3026-05-10",
+    startingBid: "700",
+    rentalPeriodYears: "8",
+    status: "kommende",
+    cropTypes: ["hvete", "bygg"],
+  });
+
+  assert.equal(result.id, 44);
+  assert.deepEqual(calls.userUpdate[0].where, { id: 11 });
+  assert.equal(calls.userUpdate[0].data.fullName, "Kari");
+  assert.deepEqual(calls.farmUpdate[0], {
+    where: { id: 22 },
+    data: {
+      ownerUserId: 11,
+      title: "Oppdatert gård",
+      description: "Ny tekst",
+      municipality: "Stange",
+      county: "Innlandet",
+      address: null,
+      centroidLat: 59.35,
+      centroidLng: 10.85,
+      soilType: "Leirjord",
+      soilQuality: "God",
+    },
+  });
+  assert.deepEqual(calls.parcelUpdate[0].where, { id: 33 });
+  assert.equal(calls.parcelUpdate[0].data.areaDekar, 120);
+  assert.deepEqual(calls.cropDeleteMany, [{ where: { farmId: 22 } }]);
+  assert.deepEqual(calls.cropTypeUpsert.map((call) => call.where.slug), ["hvete", "bygg"]);
+  assert.equal(calls.listingUpdate[0].data.status, "UPCOMING");
+  assert.equal(calls.listingUpdate[0].data.rentalPeriodYears, 8);
+  assert.equal(calls.listingUpdate[0].data.startingBidPerDekarYear, 700);
+});
+
+test("deleteById deletes the listing and orphaned farm", async () => {
+  const calls = [];
+  const tx = {
+    listing: {
+      findUnique: async (args) => {
+        calls.push(["findUnique", args]);
+        return { farmId: 22 };
+      },
+      delete: async (args) => {
+        calls.push(["listingDelete", args]);
+      },
+      count: async (args) => {
+        calls.push(["listingCount", args]);
+        return 0;
+      },
+    },
+    farm: {
+      delete: async (args) => {
+        calls.push(["farmDelete", args]);
+      },
+    },
+  };
+
+  const model = createFarmModel({
+    $transaction: async (callback) => callback(tx),
+  });
+
+  await model.deleteById("44");
+
+  assert.deepEqual(calls, [
+    ["findUnique", { where: { id: 44 }, select: { farmId: true } }],
+    ["listingDelete", { where: { id: 44 } }],
+    ["listingCount", { where: { farmId: 22 } }],
+    ["farmDelete", { where: { id: 22 } }],
+  ]);
+});
+
 test("updateBid rejects non-positive bid amounts", async () => {
   const model = createFarmModel({
     $transaction: async () => {

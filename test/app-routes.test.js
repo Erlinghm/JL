@@ -5,6 +5,7 @@ const prismaClient = require("../prisma/client");
 const { createApp, startServer } = require("../app");
 const { createIndexRouter } = require("../routes/index");
 const { createFarmRouter } = require("../routes/farms");
+const { createAdminRouter } = require("../routes/admin");
 
 function createAuthMock({
   currentUser = null,
@@ -29,6 +30,22 @@ function createAuthMock({
     return res.redirect("/logg-inn?error=Du+m%C3%A5+logge+inn+for+%C3%A5+fortsette.&next=%2Fmin-bruker");
   }
 
+  function isAdminUser(user, authUser) {
+    return user?.isAdmin === true
+      || user?.role === "ADMIN"
+      || authUser?.app_metadata?.is_admin === true;
+  }
+
+  function requireAdmin(req, res, next) {
+    if (isAdminUser(req.currentUser, req.authUser)) return next();
+    if (!req.currentUser) return res.redirect("/admin/logg-inn?error=Du+m%C3%A5+logge+inn+som+administrator.");
+    return res.status(403).render("error", {
+      title: "Ingen tilgang",
+      message: "Du har ikke tilgang til admin-panelet.",
+      hint: "Kontakt en administrator hvis du mener dette er feil.",
+    });
+  }
+
   function redirectIfAuthenticated(req, res, next) {
     if (!currentUser) return next();
     return res.redirect("/min-bruker");
@@ -37,6 +54,8 @@ function createAuthMock({
   return {
     attachCurrentUser,
     requireAuth,
+    requireAdmin,
+    isAdminUser,
     redirectIfAuthenticated,
     safeRedirect: (target, fallback = "/min-bruker") => target || fallback,
     signInWithPassword: async () => ({ user: currentUser }),
@@ -58,6 +77,7 @@ function buildApp({ prisma, Farm, auth = createAuthMock() }) {
     auth,
     indexRouter: createIndexRouter({ prisma, auth }),
     farmRouter: createFarmRouter({ Farm, auth }),
+    adminRouter: createAdminRouter({ Farm, auth }),
   });
 
   app.response.render = function render(view, locals = {}) {
@@ -123,6 +143,8 @@ function createFarmMock() {
     find: async () => [],
     findById: async () => null,
     create: async () => ({ id: 1 }),
+    update: async () => ({ id: 1 }),
+    deleteById: async () => {},
     updateBid: async () => {},
   };
 }
@@ -264,6 +286,213 @@ test("protected profile routes redirect unauthenticated users to login", async (
         assert.match(response.headers.get("location"), /^\/logg-inn\?/);
       });
     }
+  } finally {
+    await client.close();
+  }
+});
+
+test("admin routes require an administrator", async () => {
+  const anonymousClient = await startApp(buildApp({
+    prisma: createPrismaMock(),
+    Farm: createFarmMock(),
+    auth: createAuthMock({ currentUser: null }),
+  }));
+  const regularClient = await startApp(buildApp({
+    prisma: createPrismaMock(),
+    Farm: createFarmMock(),
+    auth: createAuthMock({
+      currentUser: {
+        id: 2,
+        email: "ola@example.com",
+        fullName: "Ola",
+        role: "BOTH",
+        isAdmin: false,
+      },
+    }),
+  }));
+
+  try {
+    const anonymous = await anonymousClient.request("/admin/dashboard");
+    assert.equal(anonymous.response.status, 302);
+    assert.match(anonymous.response.headers.get("location"), /^\/admin\/logg-inn\?/);
+
+    const regular = await regularClient.request("/admin/dashboard");
+    assert.equal(regular.response.status, 403);
+    assert.equal(regular.body.view, "error");
+    assert.equal(regular.body.locals.message, "Du har ikke tilgang til admin-panelet.");
+  } finally {
+    await anonymousClient.close();
+    await regularClient.close();
+  }
+});
+
+test("admin dashboard renders listings for admins", async () => {
+  const Farm = createFarmMock();
+  Farm.find = async () => [
+    { id: 1, title: "Eldre annonse", fylke: "Vestland", status: "aktiv", auctionStart: new Date("2026-04-01"), auctionEnd: new Date("2026-04-20") },
+    { id: 2, title: "Ny annonse", fylke: "Innlandet", status: "kommende", auctionStart: new Date("2026-05-01"), auctionEnd: new Date("2026-05-20") },
+  ];
+
+  const client = await startApp(buildApp({
+    prisma: createPrismaMock(),
+    Farm,
+    auth: createAuthMock({
+      currentUser: {
+        id: 1,
+        email: "admin@example.com",
+        fullName: "Admin",
+        role: "ADMIN",
+        isAdmin: true,
+      },
+    }),
+  }));
+
+  try {
+    const { response, body } = await client.request("/admin/dashboard");
+    assert.equal(response.status, 200);
+    assert.equal(body.view, "admin/dashboard");
+    assert.equal(body.locals.title, "Admin-panel - Jordleie.no");
+    assert.deepEqual(body.locals.farms.map((farm) => farm.title), ["Ny annonse", "Eldre annonse"]);
+  } finally {
+    await client.close();
+  }
+});
+
+test("admin create route normalizes form input without reusing the admin as owner", async () => {
+  const Farm = createFarmMock();
+  const calls = [];
+  Farm.create = async (input) => {
+    calls.push(input);
+    return { id: 20 };
+  };
+
+  const client = await startApp(buildApp({
+    prisma: createPrismaMock(),
+    Farm,
+    auth: createAuthMock({
+      currentUser: {
+        id: 1,
+        email: "admin@example.com",
+        fullName: "Admin",
+        role: "ADMIN",
+        isAdmin: true,
+      },
+    }),
+  }));
+
+  try {
+    const { path, init } = postForm("/admin/annonser", {
+      title: "Admin annonse",
+      description: "Beskrivelse",
+      ownerName: "Gård Eier",
+      ownerDescription: "",
+      municipality: "Råde",
+      fylke: "Østfold",
+      address: "",
+      sizeDekar: "80.5",
+      soilType: "",
+      soilQuality: "",
+      auctionStart: "2026-05-01",
+      auctionEnd: "2026-05-20",
+      startingBid: "600",
+      rentalPeriodYears: "",
+      status: "aktiv",
+    });
+
+    const { response } = await client.request(path, init);
+    assert.equal(response.status, 302);
+    assert.equal(response.headers.get("location"), "/admin/dashboard");
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].ownerUserId, undefined);
+    assert.equal(calls[0].ownerName, "Gård Eier");
+    assert.equal(calls[0].sizeDekar, 80.5);
+    assert.equal(calls[0].soilType, "Leirjord");
+    assert.equal(calls[0].soilQuality, "God");
+    assert.equal(calls[0].rentalPeriodYears, 5);
+  } finally {
+    await client.close();
+  }
+});
+
+test("admin edit and delete routes call the farm model", async () => {
+  const Farm = createFarmMock();
+  const calls = [];
+  Farm.findById = async (id) => ({
+    id: Number(id),
+    title: "Admin annonse",
+    ownerName: "Eier",
+    description: "Beskrivelse",
+    municipality: "Råde",
+    fylke: "Østfold",
+    address: null,
+    sizeDekar: 80,
+    soilType: "Leirjord",
+    soilQuality: "God",
+    auctionStart: new Date("2026-05-01"),
+    auctionEnd: new Date("2026-05-20"),
+    startingBid: 600,
+    rentalPeriodYears: 5,
+    status: "aktiv",
+  });
+  Farm.update = async (id, input) => {
+    calls.push(["update", id, input]);
+    return { id: Number(id) };
+  };
+  Farm.deleteById = async (id) => {
+    calls.push(["delete", id]);
+  };
+
+  const client = await startApp(buildApp({
+    prisma: createPrismaMock(),
+    Farm,
+    auth: createAuthMock({
+      currentUser: {
+        id: 1,
+        email: "admin@example.com",
+        fullName: "Admin",
+        role: "ADMIN",
+        isAdmin: true,
+      },
+    }),
+  }));
+
+  try {
+    const edit = await client.request("/admin/annonser/7/rediger");
+    assert.equal(edit.response.status, 200);
+    assert.equal(edit.body.view, "admin/edit");
+    assert.equal(edit.body.locals.farm.id, 7);
+
+    const update = await client.request("/admin/annonser/7", {
+      method: "PUT",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        title: "Oppdatert",
+        description: "Beskrivelse",
+        ownerName: "Eier",
+        municipality: "Råde",
+        fylke: "Østfold",
+        sizeDekar: "90",
+        auctionStart: "2026-05-01",
+        auctionEnd: "2026-05-20",
+        startingBid: "700",
+        rentalPeriodYears: "6",
+        status: "kommende",
+      }).toString(),
+    });
+    assert.equal(update.response.status, 302);
+    assert.equal(update.response.headers.get("location"), "/admin/dashboard");
+
+    const deleted = await client.request("/admin/annonser/7", { method: "DELETE" });
+    assert.equal(deleted.response.status, 302);
+    assert.equal(deleted.response.headers.get("location"), "/admin/dashboard");
+
+    assert.equal(calls.length, 2);
+    assert.equal(calls[0][0], "update");
+    assert.equal(calls[0][1], "7");
+    assert.equal(calls[0][2].title, "Oppdatert");
+    assert.equal(calls[0][2].rentalPeriodYears, 6);
+    assert.equal(calls[0][2].fieldPolygon, undefined);
+    assert.deepEqual(calls[1], ["delete", "7"]);
   } finally {
     await client.close();
   }

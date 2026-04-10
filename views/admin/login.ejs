@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wdth,wght@0,75..100,400..700;1,75..100,400..700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/landing.css">
+</head>
+<body style="display:block;">
+
+  <div style="min-height:100vh; display:flex; align-items:center; justify-content:center; background:#f9fafb;">
+    <div style="background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:2.5rem; width:100%; max-width:400px; box-shadow:0 1px 4px rgba(0,0,0,0.06);">
+
+      <div style="margin-bottom:2rem; text-align:center;">
+        <a href="/" style="text-decoration:none; color:inherit;">
+          <div style="font-weight:700; font-size:1.2rem;">Jordleie.no</div>
+        </a>
+        <h1 style="font-size:1.4rem; margin-top:1rem; margin-bottom:0.25rem;">Admin-innlogging</h1>
+        <p style="color:#6b7280; font-size:0.9rem;">Kun for administratorer.</p>
+      </div>
+
+      <% if (feil) { %>
+        <div style="background:#fef2f2; border:1px solid #fca5a5; color:#dc2626; padding:0.75rem 1rem; border-radius:8px; margin-bottom:1.25rem; font-size:0.9rem;">
+          <%= feil %>
+        </div>
+      <% } %>
+
+      <form action="/admin/logg-inn" method="POST">
+
+        <div style="margin-bottom:1rem;">
+          <label for="epost" style="display:block; font-size:0.9rem; font-weight:600; margin-bottom:0.35rem;">E-post</label>
+          <input
+            type="email"
+            id="epost"
+            name="epost"
+            required
+            autofocus
+            style="width:100%; padding:0.55rem 0.75rem; border:1px solid #d1d5db; border-radius:8px; font-size:0.95rem; box-sizing:border-box;"
+          >
+        </div>
+
+        <div style="margin-bottom:1.5rem;">
+          <label for="passord" style="display:block; font-size:0.9rem; font-weight:600; margin-bottom:0.35rem;">Passord</label>
+          <input
+            type="password"
+            id="passord"
+            name="passord"
+            required
+            style="width:100%; padding:0.55rem 0.75rem; border:1px solid #d1d5db; border-radius:8px; font-size:0.95rem; box-sizing:border-box;"
+          >
+        </div>
+
+        <button type="submit" class="btn-primary" style="width:100%; justify-content:center;">
+          Logg inn
+        </button>
+
+      </form>
+
+    </div>
+  </div>
+
+</body>
+</html>
