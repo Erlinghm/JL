@@ -28,18 +28,18 @@
       <!-- Contact form -->
       <div>
         <h3>Send oss en melding</h3>
-        <form style="display:flex; flex-direction:column; gap:14px;" onsubmit="handleContact(event)">
+        <form action="/kontakt" method="POST" style="display:flex; flex-direction:column; gap:14px;">
           <div class="form-group">
             <label class="form-label" for="cname">Navn *</label>
-            <input type="text" id="cname" class="form-input" placeholder="Ditt navn" required>
+            <input type="text" id="cname" name="name" class="form-input" placeholder="Ditt navn" required>
           </div>
           <div class="form-group">
             <label class="form-label" for="cemail">E-post *</label>
-            <input type="email" id="cemail" class="form-input" placeholder="din@epost.no" required>
+            <input type="email" id="cemail" name="email" class="form-input" placeholder="din@epost.no" required>
           </div>
           <div class="form-group">
             <label class="form-label" for="csubject">Emne</label>
-            <select id="csubject" class="form-select">
+            <select id="csubject" name="subject" class="form-select">
               <option>Generelt spørsmål</option>
               <option>Hjelp med annonse</option>
               <option>Teknisk problem</option>
@@ -50,7 +50,7 @@
           </div>
           <div class="form-group">
             <label class="form-label" for="cmessage">Melding *</label>
-            <textarea id="cmessage" class="form-textarea" rows="5" placeholder="Skriv din melding her..." required></textarea>
+            <textarea id="cmessage" name="message" class="form-textarea" rows="5" placeholder="Skriv din melding her..." required></textarea>
           </div>
           <button type="submit" class="btn btn-primary">Send melding →</button>
         </form>
@@ -103,11 +103,3 @@
 
   <%- include('partials/footer') %>
 </main>
-
-<script>
-  function handleContact(e) {
-    e.preventDefault();
-    alert("Takk for din melding! Vi svarer innen 1–2 virkedager.");
-    e.target.reset();
-  }
-</script>

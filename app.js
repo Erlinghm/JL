@@ -7,43 +7,60 @@ require("dotenv").config();
 const express = require("express");
 const methodOverride = require("method-override");
 const path = require("path");
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const prisma = require("./prisma/client");
+const defaultAuth = require("./lib/auth");
+const { createIndexRouter } = require("./routes/index");
+const { createFarmRouter } = require("./routes/farms");
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+function createApp({
+  auth = defaultAuth,
+  indexRouter = createIndexRouter({ auth }),
+  farmRouter = createFarmRouter({ auth }),
+} = {}) {
+  const app = express();
+  app.set("trust proxy", 1);
 
-// ---- Middleware ----
-app.use(express.urlencoded({ extended: true })); // Parse form data
-app.use(express.json());                          // Parse JSON
-app.use(methodOverride("_method"));              // Support PUT/DELETE from forms
-app.use(express.static(path.join(__dirname, "public"))); // Serve static files
+  // ---- Middleware ----
+  app.use(express.urlencoded({ extended: true })); // Parse form data
+  app.use(express.json());                         // Parse JSON
+  app.use(methodOverride("_method"));              // Support PUT/DELETE from forms
+  app.use(express.static(path.join(__dirname, "public"))); // Serve static files
+  app.use(auth.attachCurrentUser);
 
-// ---- View Engine ----
-app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "views"));
+  // ---- View Engine ----
+  app.set("view engine", "ejs");
+  app.set("views", path.join(__dirname, "views"));
 
-// ---- Routes ----
-const indexRoutes = require("./routes/index");
-const farmRoutes  = require("./routes/farms");
+  // ---- Routes ----
+  app.use("/", indexRouter);
+  app.use("/auksjoner", farmRouter);
 
-app.use("/", indexRoutes);
-app.use("/auksjoner", farmRoutes);
+  // ---- 404 Handler ----
+  app.use((req, res) => {
+    res.status(404).render("404", { title: "Side ikke funnet" });
+  });
 
-// ---- 404 Handler ----
-app.use((req, res) => {
-  res.status(404).render("404", { title: "Side ikke funnet" });
-});
-
-// ---- Start Server ----
-const server = app.listen(PORT, () => {
-  console.log(`🚜 Jordleie.no kjører på http://localhost:${PORT}`);
-});
-
-// ---- Graceful shutdown – close Prisma connection ----
-async function shutdown() {
-  await prisma.$disconnect();
-  server.close(() => process.exit(0));
+  return app;
 }
-process.on("SIGINT",  shutdown);
-process.on("SIGTERM", shutdown);
+
+function startServer({ app = createApp(), port = process.env.PORT || 3000 } = {}) {
+  const server = app.listen(port, () => {
+    console.log(`🚜 Jordleie.no kjører på http://localhost:${port}`);
+  });
+
+  async function shutdown() {
+    await prisma.$disconnect();
+    server.close(() => process.exit(0));
+  }
+
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
+
+  return { app, server, shutdown };
+}
+
+if (require.main === module) {
+  startServer();
+}
+
+module.exports = { createApp, startServer };

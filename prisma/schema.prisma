@@ -1,19 +1,3 @@
-// ============================================================
-// Prisma Schema – Jordleie.no
-// Database: PostgreSQL on Supabase
-// App host:  Railway
-//
-// Two connection strings are needed for Supabase + Prisma:
-//   DATABASE_URL  → Supabase connection pooler (used by the app)
-//   DIRECT_URL    → Supabase direct connection (used for migrations)
-//
-// First-time setup:
-//   npm install
-//   npx prisma generate
-//   npx prisma migrate dev --name init
-//   node seed.js
-// ============================================================
-
 generator client {
   provider      = "prisma-client-js"
   binaryTargets = ["native", "linux-arm64-openssl-3.0.x"]
@@ -25,74 +9,289 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// ---- Farms ------------------------------------------------
-// A farm listing posted by an owner. Auction info is stored
-// directly here for simplicity (no auth yet).
+enum UserRole {
+  OWNER
+  TENANT
+  BOTH
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING_VERIFICATION
+}
+
+enum VerificationType {
+  IDENTITY
+  FARMER
+  LANDOWNER
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum ListingStatus {
+  DRAFT
+  PUBLISHED
+  UPCOMING
+  ACTIVE
+  ENDED
+  AWARDED
+  CANCELLED
+}
+
+enum BidStatus {
+  VALID
+  OUTBID
+  WINNING
+  REJECTED
+  WITHDRAWN
+}
+
+enum ConversationType {
+  LISTING_INQUIRY
+  SUPPORT
+}
+
+enum LeaseStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  SIGNED
+  CANCELLED
+  EXPIRED
+}
+
+enum ContactSubmissionStatus {
+  NEW
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+model User {
+  id                   Int                       @id @default(autoincrement())
+  authUserId           String?                   @unique @db.Uuid @map("auth_user_id")
+  email                String                    @unique
+  passwordHash         String?
+  fullName             String
+  phone                String?
+  isAdmin              Boolean?                  @default(false) @map("is_admin")
+  role                 UserRole                  @default(BOTH)
+  status               UserStatus                @default(PENDING_VERIFICATION)
+  createdAt            DateTime                  @default(now())
+  updatedAt            DateTime                  @default(now()) @updatedAt
+  profile              UserProfile?
+  verifications        UserVerification[]
+  ownedFarms           Farm[]                    @relation("FarmOwner")
+  ownedListings        Listing[]                 @relation("ListingOwner")
+  bids                 Bid[]                     @relation("Bidder")
+  createdConversations Conversation[]            @relation("ConversationCreator")
+  conversationLinks    ConversationParticipant[]
+  sentMessages         Message[]                 @relation("MessageSender")
+  ownerLeases          Lease[]                   @relation("LeaseOwner")
+  tenantLeases         Lease[]                   @relation("LeaseTenant")
+}
+
+model UserProfile {
+  userId             Int     @id
+  county             String?
+  bio                String?
+  avatarUrl          String?
+  farmerType         String?
+  organizationName   String?
+  organizationNumber String?
+  user               User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserVerification {
+  id         Int                @id @default(autoincrement())
+  userId     Int
+  type       VerificationType
+  status     VerificationStatus @default(PENDING)
+  reviewedAt DateTime?
+  notes      String?
+  createdAt  DateTime           @default(now())
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type])
+  @@index([userId, status])
+}
+
 model Farm {
-  id                Int      @id @default(autoincrement())
-  title             String
-  description       String
-  ownerName         String
-  ownerDescription  String?
+  id           Int            @id @default(autoincrement())
+  ownerUserId  Int
+  title        String
+  description  String
+  municipality String
+  county       String
+  address      String?
+  centroidLat  Float          @default(60.472)
+  centroidLng  Float          @default(8.469)
+  soilType     String         @default("Leirjord")
+  soilQuality  String         @default("God")
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  owner        User           @relation("FarmOwner", fields: [ownerUserId], references: [id], onDelete: Restrict)
+  parcels      FarmParcel[]
+  cropTypes    FarmCropType[]
+  listings     Listing[]
 
-  // Location
-  municipality      String
-  fylke             String
-  address           String?
-  lat               Float    @default(60.472)
-  lng               Float    @default(8.469)
-
-  // Field polygon stored as JSON string (array of [lat, lng] pairs)
-  fieldPolygon      String   @default("[]")
-
-  // Farm details
-  sizeDekar         Float
-  soilType          String   @default("Leirjord")
-  soilQuality       String   @default("God")
-
-  // Soil composition percentages stored as JSON string
-  soilComposition   String   @default("{\"leire\":35,\"sand\":25,\"silt\":30,\"organisk\":10}")
-
-  // Auction info
-  auctionStart      DateTime
-  auctionEnd        DateTime
-  startingBid       Float
-  currentBid        Float    @default(0)
-  rentalPeriodYears Int      @default(5)
-
-  // Status: "kommende" | "aktiv" | "avsluttet"
-  status            String   @default("aktiv")
-
-  createdAt         DateTime @default(now())
-
-  // Relations
-  cropTypes         FarmCropType[]
-  bids              Bid[]
+  @@index([ownerUserId])
+  @@index([county])
 }
 
-// ---- Crop types -------------------------------------------
-// Normalised crop type tags for each farm (replaces embedded
-// string array in MongoDB).
+model FarmParcel {
+  id                  Int      @id @default(autoincrement())
+  farmId              Int
+  name                String?
+  areaDekar           Float
+  polygonJson         Json
+  soilCompositionJson Json
+  waterAccess         String?
+  drainageNotes       String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  farm                Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
+
+  @@index([farmId])
+}
+
+model CropType {
+  id        Int            @id @default(autoincrement())
+  slug      String         @unique
+  name      String
+  farmLinks FarmCropType[]
+}
+
 model FarmCropType {
-  id       Int    @id @default(autoincrement())
-  farmId   Int
-  cropType String
+  farmId     Int
+  cropTypeId Int
+  farm       Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  cropType   CropType @relation(fields: [cropTypeId], references: [id], onDelete: Cascade)
 
-  farm     Farm   @relation(fields: [farmId], references: [id], onDelete: Cascade)
-
-  @@index([farmId])
+  @@id([farmId, cropTypeId])
+  @@index([cropTypeId])
 }
 
-// ---- Bids -------------------------------------------------
-// Full bid history (replaces single currentBid field in Mongo).
-model Bid {
-  id          Int      @id @default(autoincrement())
-  farmId      Int
-  bidderName  String
-  amount      Float
-  createdAt   DateTime @default(now())
-
-  farm        Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
+model Listing {
+  id                      Int            @id @default(autoincrement())
+  farmId                  Int
+  ownerUserId             Int
+  status                  ListingStatus  @default(ACTIVE)
+  rentalPeriodYears       Int            @default(5)
+  startingBidPerDekarYear Float
+  currentBidPerDekarYear  Float          @default(0)
+  auctionStartAt          DateTime
+  auctionEndAt            DateTime
+  winnerBidId             Int?           @unique
+  publishedAt             DateTime?
+  createdAt               DateTime       @default(now())
+  updatedAt               DateTime       @updatedAt
+  farm                    Farm           @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  owner                   User           @relation("ListingOwner", fields: [ownerUserId], references: [id], onDelete: Restrict)
+  bids                    Bid[]          @relation("ListingBids")
+  winnerBid               Bid?           @relation("ListingWinner", fields: [winnerBidId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  conversations           Conversation[]
+  lease                   Lease?
 
   @@index([farmId])
+  @@index([ownerUserId, status])
+  @@index([status, auctionEndAt])
+}
+
+model Bid {
+  id                 Int       @id @default(autoincrement())
+  listingId          Int
+  bidderUserId       Int
+  amountPerDekarYear Float
+  totalAmountPerYear Float
+  status             BidStatus @default(VALID)
+  createdAt          DateTime  @default(now())
+  listing            Listing   @relation("ListingBids", fields: [listingId], references: [id], onDelete: Cascade)
+  bidder             User      @relation("Bidder", fields: [bidderUserId], references: [id], onDelete: Restrict)
+  winningListing     Listing?  @relation("ListingWinner")
+  winningLease       Lease?    @relation("LeaseWinningBid")
+
+  @@index([listingId, createdAt])
+  @@index([bidderUserId, createdAt])
+}
+
+model Conversation {
+  id              Int                       @id @default(autoincrement())
+  listingId       Int?
+  createdByUserId Int
+  type            ConversationType          @default(LISTING_INQUIRY)
+  createdAt       DateTime                  @default(now())
+  listing         Listing?                  @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  createdBy       User                      @relation("ConversationCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  participants    ConversationParticipant[]
+  messages        Message[]
+
+  @@index([listingId])
+  @@index([createdByUserId])
+}
+
+model ConversationParticipant {
+  conversationId Int
+  userId         Int
+  lastReadAt     DateTime?
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([conversationId, userId])
+  @@index([userId])
+}
+
+model Message {
+  id             Int          @id @default(autoincrement())
+  conversationId Int
+  senderUserId   Int
+  body           String
+  createdAt      DateTime     @default(now())
+  deletedAt      DateTime?
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User         @relation("MessageSender", fields: [senderUserId], references: [id], onDelete: Restrict)
+
+  @@index([conversationId, createdAt])
+}
+
+model Lease {
+  id           Int         @id @default(autoincrement())
+  listingId    Int         @unique
+  ownerUserId  Int
+  tenantUserId Int
+  winningBidId Int?        @unique
+  status       LeaseStatus @default(DRAFT)
+  startDate    DateTime?
+  endDate      DateTime?
+  annualAmount Float?
+  contractUrl  String?
+  signedAt     DateTime?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  listing      Listing     @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  owner        User        @relation("LeaseOwner", fields: [ownerUserId], references: [id], onDelete: Restrict)
+  tenant       User        @relation("LeaseTenant", fields: [tenantUserId], references: [id], onDelete: Restrict)
+  winningBid   Bid?        @relation("LeaseWinningBid", fields: [winningBidId], references: [id], onDelete: SetNull)
+
+  @@index([ownerUserId])
+  @@index([tenantUserId])
+}
+
+model ContactSubmission {
+  id         Int                     @id @default(autoincrement())
+  name       String
+  email      String
+  subject    String?
+  message    String
+  status     ContactSubmissionStatus @default(NEW)
+  createdAt  DateTime                @default(now())
+  resolvedAt DateTime?
+
+  @@index([status, createdAt])
 }
