@@ -2138,3 +2138,288 @@ body.has-sidebar {
   .lp-hero h1 { font-size: 2.6rem; }
   .lp-section-title { font-size: 1.85rem; }
 }
+
+/* ============================================================
+   VISUAL ENHANCEMENTS v2
+   ============================================================ */
+
+/* Extended tokens */
+:root {
+  --green-dark: #1A3D16;
+  --shadow-green: 0 4px 24px rgba(45,90,39,0.18);
+}
+
+/* ---- Hero: background radial bloom ---- */
+.lp-hero::before {
+  content: '';
+  position: absolute;
+  bottom: -80px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80vw;
+  height: 80vw;
+  max-width: 920px;
+  max-height: 920px;
+  background: radial-gradient(ellipse, rgba(45,90,39,0.055) 0%, transparent 65%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.lp-hero-text,
+.lp-hero-image {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---- Hero: eyebrow pill ---- */
+.lp-hero-eyebrow {
+  background: var(--green-pale);
+  padding: 5px 14px;
+  border-radius: 100px;
+  border: 1px solid rgba(45,90,39,0.18);
+}
+
+/* ---- Hero: trust line ---- */
+.lp-hero-trust {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 22px;
+  flex-wrap: wrap;
+}
+
+.lp-hero-trust-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.lp-hero-trust-item svg {
+  color: var(--green);
+  flex-shrink: 0;
+}
+
+.lp-hero-trust-sep {
+  color: var(--border);
+  font-size: 1rem;
+  line-height: 1;
+  user-select: none;
+}
+
+/* ---- Stats bar: dark green treatment ---- */
+.lp-stats {
+  background: var(--green);
+  border-color: var(--green);
+}
+
+.lp-stat-value {
+  color: #fff;
+}
+
+.lp-stat-label {
+  color: rgba(255,255,255,0.65);
+}
+
+.lp-stat + .lp-stat {
+  border-left-color: rgba(255,255,255,0.18);
+}
+
+/* ---- Process grid: dashed step connector ---- */
+.lp-process-grid {
+  position: relative;
+}
+
+.lp-process-grid::before {
+  content: '';
+  position: absolute;
+  top: 54px;
+  left: calc(16.66% + 42px);
+  right: calc(16.66% + 42px);
+  height: 2px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--green) 0px,
+    var(--green) 7px,
+    transparent 7px,
+    transparent 16px
+  );
+  opacity: 0.22;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ---- Comparison: recommended badge + elevation ---- */
+.lp-comparison-grid {
+  overflow: visible;
+  padding-top: 18px;
+}
+
+.lp-comparison-card.new {
+  position: relative;
+  box-shadow: var(--shadow-green);
+  transform: translateY(-4px);
+}
+
+.lp-comparison-card.new::before {
+  content: 'Anbefalt';
+  position: absolute;
+  top: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  color: var(--green);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 4px 16px;
+  border-radius: 100px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  white-space: nowrap;
+}
+
+/* ---- Testimonials: decorative quote mark ---- */
+.lp-testimonial {
+  position: relative;
+  overflow: hidden;
+}
+
+.lp-testimonial::before {
+  content: '\201C';
+  position: absolute;
+  top: 8px;
+  right: 18px;
+  font-size: 6rem;
+  line-height: 1;
+  color: var(--green-pale);
+  font-weight: 900;
+  pointer-events: none;
+  user-select: none;
+  letter-spacing: -0.06em;
+}
+
+.lp-testimonial blockquote {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---- Auction cards: green left accent ---- */
+.lp-auction-card {
+  border-left: 3px solid var(--green);
+}
+
+/* ---- CTA banner: richer gradient ---- */
+.lp-cta {
+  background: linear-gradient(140deg, var(--green-dark) 0%, var(--green) 55%, #4D9444 100%);
+}
+
+.lp-cta::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 12% 75%, rgba(255,255,255,0.07) 0%, transparent 48%),
+    radial-gradient(ellipse at 88% 25%, rgba(255,255,255,0.07) 0%, transparent 48%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.lp-cta h2,
+.lp-cta p,
+.lp-cta-actions {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---- Footer: top accent ---- */
+.lp-footer {
+  border-top-width: 3px;
+  border-top-color: var(--green);
+}
+
+/* ---- Mobile nav: hamburger button ---- */
+.lp-nav-hamburger {
+  display: none;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  color: var(--text);
+  margin-left: auto;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.lp-nav-hamburger:hover { background: var(--bg-alt); }
+
+@media (max-width: 960px) {
+  .lp-nav-hamburger { display: flex; }
+  .lp-nav-actions .btn-nav-primary { display: none; }
+
+  .lp-nav-links.lp-nav-links--open {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 64px;
+    left: 0;
+    right: 0;
+    background: rgba(250,250,247,0.97);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    gap: 4px;
+    z-index: 200;
+  }
+
+  .lp-nav-links.lp-nav-links--open li { width: 100%; }
+
+  .lp-nav-links.lp-nav-links--open a {
+    display: block;
+    padding: 10px 0;
+    font-size: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+}
+
+/* ---- Hero: mobile triple fix ---- */
+@media (max-width: 860px) {
+  .lp-hero-triple {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .lp-hero-image {
+    display: none;
+  }
+
+  .lp-hero-text {
+    padding: 56px 24px 48px;
+  }
+
+  .lp-hero-trust {
+    gap: 10px;
+  }
+
+  .lp-hero-trust-sep {
+    display: none;
+  }
+}
+
+/* ---- Comparison: mobile fix ---- */
+@media (max-width: 960px) {
+  .lp-comparison-card.new {
+    transform: none;
+  }
+
+  .lp-comparison-grid {
+    padding-top: 22px;
+  }
+}
