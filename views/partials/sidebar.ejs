@@ -71,8 +71,38 @@
           Min bruker
         </a>
       </li>
+      <% if (!currentUser) { %>
+        <li>
+          <a href="/logg-inn" class="app-sidebar-link">
+            <span class="app-sidebar-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+            </span>
+            Logg inn
+          </a>
+        </li>
+      <% } else if (currentUser.isAdmin || currentUser.role === 'ADMIN') { %>
+        <li>
+          <a href="/admin/dashboard" class="app-sidebar-link">
+            <span class="app-sidebar-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 4v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V7l7-4z"/><path d="M9 12l2 2 4-4"/></svg>
+            </span>
+            Admin
+          </a>
+        </li>
+      <% } %>
     </ul>
   </nav>
 
+  <% if (currentUser) { %>
+    <div class="app-sidebar-divider"></div>
+    <div style="padding:0 22px 22px;">
+      <div style="font-size:0.78rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-light); margin-bottom:8px;">Innlogget som</div>
+      <div style="font-weight:700; color:var(--text);"><%= currentUser.fullName %></div>
+      <div style="font-size:0.84rem; color:var(--text-mid); margin-top:2px;"><%= currentUser.email %></div>
+      <form action="/logg-ut" method="POST" style="margin-top:14px;">
+        <button type="submit" class="btn btn-outline btn-sm" style="width:100%; justify-content:center;">Logg ut</button>
+      </form>
+    </div>
+  <% } %>
 
 </aside>

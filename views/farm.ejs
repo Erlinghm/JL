@@ -220,30 +220,38 @@
 
         <!-- Bid form -->
         <% if (farm.status === "aktiv") { %>
-          <form action="/auksjoner/<%= farm._id %>/bid" method="POST" class="ap-bid-form">
-            <label class="ap-bid-form-label">Ditt navn</label>
-            <input
-              type="text"
-              name="bidderName"
-              class="ap-bid-input"
-              placeholder="Fornavn Etternavn"
-              required>
-            <label class="ap-bid-form-label">Ditt bud (kr per dekar per år)</label>
-            <input
-              type="number"
-              name="bidAmount"
-              class="ap-bid-input"
-              placeholder="<%= farm.currentBid > 0 ? farm.currentBid + 1 : farm.startingBid %>"
-              min="<%= farm.currentBid > 0 ? farm.currentBid + 1 : farm.startingBid %>"
-              required>
-            <p class="ap-bid-hint">
-              Budet er per dekar per år. Total kostnad per år:
-              <strong id="total-cost">–</strong>
-            </p>
-            <button type="submit" class="btn-primary" style="width:100%; justify-content:center;">
-              Legg inn bud →
-            </button>
-          </form>
+          <% if (currentUser) { %>
+            <form action="/auksjoner/<%= farm._id %>/bid" method="POST" class="ap-bid-form">
+              <p class="ap-bid-hint" style="margin-bottom:10px;">
+                Budet registreres som <strong><%= currentUser.fullName %></strong>.
+              </p>
+              <label class="ap-bid-form-label">Ditt bud (kr per dekar per år)</label>
+              <input
+                type="number"
+                name="bidAmount"
+                class="ap-bid-input"
+                placeholder="<%= farm.currentBid > 0 ? farm.currentBid + 1 : farm.startingBid %>"
+                min="<%= farm.currentBid > 0 ? farm.currentBid + 1 : farm.startingBid %>"
+                required>
+              <p class="ap-bid-hint">
+                Budet er per dekar per år. Total kostnad per år:
+                <strong id="total-cost">–</strong>
+              </p>
+              <button type="submit" class="btn-primary" style="width:100%; justify-content:center;">
+                Legg inn bud →
+              </button>
+            </form>
+          <% } else { %>
+            <div class="ap-auction-state">
+              <div class="ap-auction-state-title">Du må være logget inn for å by</div>
+              <div class="ap-auction-state-date" style="margin-bottom:14px;">
+                Opprett bruker eller logg inn for å legge inn bud på denne annonsen.
+              </div>
+              <a href="/logg-inn?next=<%= encodeURIComponent(`/auksjoner/${farm.id}`) %>" class="btn-primary" style="width:100%; justify-content:center; text-decoration:none;">
+                Logg inn for å by
+              </a>
+            </div>
+          <% } %>
 
         <% } else if (farm.status === "kommende") { %>
           <div class="ap-auction-state">

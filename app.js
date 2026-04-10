@@ -55,5 +55,9 @@ async function shutdown() {
   await prisma.$disconnect();
   server.close(() => process.exit(0));
 }
-process.on("SIGINT",  shutdown);
-process.on("SIGTERM", shutdown);
+
+if (require.main === module) {
+  startServer();
+}
+
+module.exports = { createApp, startServer };
