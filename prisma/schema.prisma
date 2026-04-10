@@ -109,17 +109,31 @@ model UserProfile {
 }
 
 model UserVerification {
-  id         Int                @id @default(autoincrement())
-  userId     Int
-  type       VerificationType
-  status     VerificationStatus @default(PENDING)
-  reviewedAt DateTime?
-  notes      String?
-  createdAt  DateTime           @default(now())
-  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id              Int                @id @default(autoincrement())
+  userId          Int
+  type            VerificationType
+  status          VerificationStatus @default(PENDING)
+  reviewedAt      DateTime?
+  notes           String?
+  provider        String?
+  providerSubject String?            @map("provider_subject")
+  acr             String?
+  verifiedAt      DateTime?          @map("verified_at")
+  createdAt       DateTime           @default(now())
+  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, type])
+  @@unique([provider, providerSubject])
   @@index([userId, status])
+}
+
+model Session {
+  sid    String   @id @db.VarChar
+  sess   Json     @db.Json
+  expire DateTime @db.Timestamp(6)
+
+  @@index([expire], map: "IDX_session_expire")
+  @@map("session")
 }
 
 model Farm {

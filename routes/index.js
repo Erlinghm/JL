@@ -313,7 +313,7 @@ function createIndexRouter({ prisma = defaultPrisma, auth = defaultAuth } = {}) 
   });
 
   // Lag annonse (Create listing)
-  router.get("/lag-annonse", auth.requireAuth, (req, res) => {
+  router.get("/lag-annonse", auth.requireAuth, auth.requireVerifiedIdentity, (req, res) => {
     res.render("create-listing", {
       title: "Lag annonse",
       user: req.currentUser,

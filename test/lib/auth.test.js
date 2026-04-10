@@ -1,7 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 
-const { createAuth } = require("../../lib/auth");
+const { createAuth, hasVerifiedIdentity } = require("../../lib/auth");
 
 function withSupabaseEnv(run) {
   const previous = {
@@ -98,6 +98,26 @@ function buildSession(user, overrides = {}) {
     ...overrides,
   };
 }
+
+test("hasVerifiedIdentity only accepts verified identity rows", () => {
+  assert.equal(hasVerifiedIdentity(null), false);
+  assert.equal(hasVerifiedIdentity({ verifications: [] }), false);
+  assert.equal(hasVerifiedIdentity({
+    verifications: [{ type: "IDENTITY", status: "PENDING" }],
+  }), false);
+  assert.equal(hasVerifiedIdentity({
+    verifications: [{ type: "IDENTITY", status: "REJECTED" }],
+  }), false);
+  assert.equal(hasVerifiedIdentity({
+    verifications: [{ type: "FARMER", status: "VERIFIED" }],
+  }), false);
+  assert.equal(hasVerifiedIdentity({
+    verifications: [{ type: "LANDOWNER", status: "VERIFIED" }],
+  }), false);
+  assert.equal(hasVerifiedIdentity({
+    verifications: [{ type: "IDENTITY", status: "VERIFIED" }],
+  }), true);
+});
 
 test("signInWithPassword persists long-lived session cookies without granting admin from metadata", async () => {
   await withSupabaseEnv(async () => {

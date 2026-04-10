@@ -9,6 +9,12 @@ const defaultAuth = require("../lib/auth");
 
 function createFarmRouter({ Farm = defaultFarm, auth = defaultAuth } = {}) {
   const router = express.Router();
+  const setVerificationNextPath = (pathOrBuilder) => (req, res, next) => {
+    req.verificationNextPath = typeof pathOrBuilder === "function"
+      ? pathOrBuilder(req)
+      : pathOrBuilder;
+    next();
+  };
 
   // ---- GET /auksjoner – Show all farm listings with optional filters ----
   router.get("/", async (req, res) => {
@@ -75,7 +81,12 @@ function createFarmRouter({ Farm = defaultFarm, auth = defaultAuth } = {}) {
   });
 
   // ---- POST /auksjoner – Create a new farm listing ----
-  router.post("/", auth.requireAuth, async (req, res) => {
+  router.post(
+    "/",
+    auth.requireAuth,
+    setVerificationNextPath("/lag-annonse"),
+    auth.requireVerifiedIdentity,
+    async (req, res) => {
     try {
       const {
         title, description, ownerName, ownerDescription,
@@ -124,7 +135,12 @@ function createFarmRouter({ Farm = defaultFarm, auth = defaultAuth } = {}) {
   });
 
   // ---- POST /auksjoner/:id/bid – Place a bid ----
-  router.post("/:id/bid", auth.requireAuth, async (req, res) => {
+  router.post(
+    "/:id/bid",
+    auth.requireAuth,
+    setVerificationNextPath((req) => `/auksjoner/${req.params.id}`),
+    auth.requireVerifiedIdentity,
+    async (req, res) => {
     try {
       const farm = await Farm.findById(req.params.id);
       if (!farm) return res.status(404).send("Ikke funnet");

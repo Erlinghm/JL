@@ -1,11 +1,26 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const express = require("express");
+const session = require("express-session");
 const prismaClient = require("../prisma/client");
 const { createApp, startServer } = require("../app");
 const { createIndexRouter } = require("../routes/index");
+const { createBankIdRouter } = require("../routes/bankid");
 const { createFarmRouter } = require("../routes/farms");
 const { createAdminRouter } = require("../routes/admin");
+
+function withVerifiedIdentity(user) {
+  return {
+    ...user,
+    verifications: [
+      ...(user.verifications || []),
+      {
+        type: "IDENTITY",
+        status: "VERIFIED",
+      },
+    ],
+  };
+}
 
 function createAuthMock({
   currentUser = null,
@@ -21,6 +36,7 @@ function createAuthMock({
     res.locals.currentUser = currentUser;
     res.locals.authUser = req.authUser;
     res.locals.isAuthenticated = Boolean(currentUser);
+    res.locals.identityVerified = hasVerifiedIdentity(currentUser);
     res.locals.authConfigured = isConfigured;
     next();
   }
@@ -32,6 +48,20 @@ function createAuthMock({
 
   function isAdminUser(user, authUser) {
     return user?.isAdmin === true;
+  }
+
+  function hasVerifiedIdentity(user) {
+    return Array.isArray(user?.verifications)
+      && user.verifications.some((verification) => (
+        verification.type === "IDENTITY"
+        && verification.status === "VERIFIED"
+      ));
+  }
+
+  function requireVerifiedIdentity(req, res, next) {
+    if (!currentUser) return requireAuth(req, res, next);
+    if (hasVerifiedIdentity(currentUser)) return next();
+    return res.redirect(`/bankid/verifiser?next=${encodeURIComponent(req.verificationNextPath || req.originalUrl)}`);
   }
 
   function requireAdmin(req, res, next) {
@@ -52,10 +82,16 @@ function createAuthMock({
   return {
     attachCurrentUser,
     requireAuth,
+    requireVerifiedIdentity,
     requireAdmin,
     isAdminUser,
+    hasVerifiedIdentity,
     redirectIfAuthenticated,
-    safeRedirect: (target, fallback = "/min-bruker") => target || fallback,
+    safeRedirect: (target, fallback = "/min-bruker") => {
+      if (!target || typeof target !== "string") return fallback;
+      if (!target.startsWith("/") || target.startsWith("//")) return fallback;
+      return target;
+    },
     signInWithPassword: async () => ({ user: currentUser }),
     signUpWithPassword: async (args) => {
       if (onSignUp) onSignUp(args);
@@ -70,10 +106,12 @@ function createAuthMock({
   };
 }
 
-function buildApp({ prisma, Farm, auth = createAuthMock() }) {
+function buildApp({ prisma, Farm, auth = createAuthMock(), bankIdRouter = null }) {
   const app = createApp({
     auth,
+    sessionMiddleware: createTestSessionMiddleware(),
     indexRouter: createIndexRouter({ prisma, auth }),
+    bankIdRouter: bankIdRouter || createBankIdRouter({ prisma, auth }),
     farmRouter: createFarmRouter({ Farm, auth }),
     adminRouter: createAdminRouter({ Farm, auth }),
   });
@@ -83,6 +121,17 @@ function buildApp({ prisma, Farm, auth = createAuthMock() }) {
   };
 
   return app;
+}
+
+function createTestSessionMiddleware() {
+  return session({
+    secret: "test-session-secret",
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+      secure: false,
+    },
+  });
 }
 
 async function startApp(app) {
@@ -136,6 +185,24 @@ function createPrismaMock() {
   };
 }
 
+function createBankIdEnv() {
+  return {
+    IDURA_DOMAIN: "test.idura.example",
+    IDURA_CLIENT_ID: "urn:test:client",
+    IDURA_CLIENT_SECRET: "secret",
+    IDURA_ACR_VALUES: "urn:grn:authn:no:bankid",
+  };
+}
+
+function createBankIdRedirectMock(claims) {
+  return {
+    middleware: () => (req, res, next) => {
+      req.claims = claims;
+      next();
+    },
+  };
+}
+
 function createFarmMock() {
   return {
     find: async () => [],
@@ -168,6 +235,9 @@ test("startServer creates an app, logs the port, registers signal handlers, and 
   const originalExit = process.exit;
   const originalLog = console.log;
   const originalDisconnect = prismaClient.$disconnect;
+  const originalNodeEnv = process.env.NODE_ENV;
+  const originalDatabaseUrl = process.env.DATABASE_URL;
+  const originalSessionSecret = process.env.SESSION_SECRET;
   const registeredSignals = [];
   const logs = [];
   const exits = [];
@@ -183,6 +253,9 @@ test("startServer creates an app, logs the port, registers signal handlers, and 
     logs.push(message);
   };
   prismaClient.$disconnect = async () => {};
+  process.env.NODE_ENV = "test";
+  delete process.env.DATABASE_URL;
+  delete process.env.SESSION_SECRET;
 
   try {
     const { app, server, shutdown } = startServer({ port: 0 });
@@ -202,11 +275,26 @@ test("startServer creates an app, logs the port, registers signal handlers, and 
     process.exit = originalExit;
     console.log = originalLog;
     prismaClient.$disconnect = originalDisconnect;
+    if (originalNodeEnv === undefined) {
+      delete process.env.NODE_ENV;
+    } else {
+      process.env.NODE_ENV = originalNodeEnv;
+    }
+    if (originalDatabaseUrl === undefined) {
+      delete process.env.DATABASE_URL;
+    } else {
+      process.env.DATABASE_URL = originalDatabaseUrl;
+    }
+    if (originalSessionSecret === undefined) {
+      delete process.env.SESSION_SECRET;
+    } else {
+      process.env.SESSION_SECRET = originalSessionSecret;
+    }
   }
 });
 
 test("static pages and login/profile routes render the expected views", async (t) => {
-  const currentUser = {
+  const currentUser = withVerifiedIdentity({
     id: 1,
     email: "bonde@example.com",
     fullName: "Bonde Bruker",
@@ -218,7 +306,7 @@ test("static pages and login/profile routes render the expected views", async (t
       county: "Innlandet",
       bio: "Driver gård.",
     },
-  };
+  });
   const publicClient = await startApp(buildApp({
     prisma: createPrismaMock(),
     Farm: createFarmMock(),
@@ -284,6 +372,243 @@ test("protected profile routes redirect unauthenticated users to login", async (
         assert.match(response.headers.get("location"), /^\/logg-inn\?/);
       });
     }
+  } finally {
+    await client.close();
+  }
+});
+
+test("GET /lag-annonse redirects logged-in unverified users to BankID", async () => {
+  const currentUser = {
+    id: 11,
+    email: "unverified@example.com",
+    fullName: "Uverifisert Bruker",
+    role: "BOTH",
+    status: "ACTIVE",
+    createdAt: new Date("2026-04-09T10:00:00Z"),
+    profile: {},
+    verifications: [],
+  };
+  const client = await startApp(buildApp({
+    prisma: createPrismaMock(),
+    Farm: createFarmMock(),
+    auth: createAuthMock({ currentUser }),
+  }));
+
+  try {
+    const { response } = await client.request("/lag-annonse");
+    assert.equal(response.status, 302);
+    assert.equal(response.headers.get("location"), "/bankid/verifiser?next=%2Flag-annonse");
+  } finally {
+    await client.close();
+  }
+});
+
+test("GET /bankid/verifiser stores a verified identity from Idura claims", async () => {
+  const calls = [];
+  const prisma = createPrismaMock();
+  prisma.userVerification = {
+    findFirst: async (args) => {
+      calls.push(["findFirst", args]);
+      return null;
+    },
+    upsert: async (args) => {
+      calls.push(["upsert", args]);
+      return { id: 1, ...args.create };
+    },
+  };
+  const currentUser = {
+    id: 21,
+    email: "bankid@example.com",
+    fullName: "BankID Bruker",
+    role: "BOTH",
+    status: "ACTIVE",
+    createdAt: new Date("2026-04-09T10:00:00Z"),
+    profile: {},
+    verifications: [],
+  };
+  const auth = createAuthMock({ currentUser });
+  const bankIdRouter = createBankIdRouter({
+    prisma,
+    auth,
+    env: createBankIdEnv(),
+    bankIdRedirect: createBankIdRedirectMock({
+      sub: "idura-subject-1",
+      authenticationtype: "urn:grn:authn:no:bankid",
+    }),
+  });
+  const client = await startApp(buildApp({
+    prisma,
+    Farm: createFarmMock(),
+    auth,
+    bankIdRouter,
+  }));
+
+  try {
+    const { response } = await client.request("/bankid/verifiser?code=abc&next=%2Flag-annonse");
+    assert.equal(response.status, 302);
+    assert.equal(response.headers.get("location"), "/lag-annonse?success=BankID-verifisering+er+fullf%C3%B8rt.");
+    assert.equal(calls.length, 2);
+    assert.deepEqual(calls[0], ["findFirst", {
+      where: {
+        provider: "IDURA_VERIFY",
+        providerSubject: "idura-subject-1",
+        NOT: {
+          userId: 21,
+        },
+      },
+      select: {
+        id: true,
+      },
+    }]);
+    assert.equal(calls[1][0], "upsert");
+    assert.deepEqual(calls[1][1].where, {
+      userId_type: {
+        userId: 21,
+        type: "IDENTITY",
+      },
+    });
+    assert.equal(calls[1][1].create.status, "VERIFIED");
+    assert.equal(calls[1][1].create.provider, "IDURA_VERIFY");
+    assert.equal(calls[1][1].create.providerSubject, "idura-subject-1");
+    assert.equal(calls[1][1].create.acr, "urn:grn:authn:no:bankid");
+    assert.ok(calls[1][1].create.verifiedAt instanceof Date);
+  } finally {
+    await client.close();
+  }
+});
+
+test("GET /bankid/verifiser rejects callbacks without an Idura subject", async () => {
+  const prisma = createPrismaMock();
+  prisma.userVerification = {
+    findFirst: async () => {
+      throw new Error("should not query without subject");
+    },
+    upsert: async () => {
+      throw new Error("should not upsert without subject");
+    },
+  };
+  const currentUser = {
+    id: 22,
+    email: "missing-subject@example.com",
+    fullName: "Missing Subject",
+    role: "BOTH",
+    status: "ACTIVE",
+    createdAt: new Date("2026-04-09T10:00:00Z"),
+    profile: {},
+    verifications: [],
+  };
+  const auth = createAuthMock({ currentUser });
+  const bankIdRouter = createBankIdRouter({
+    prisma,
+    auth,
+    env: createBankIdEnv(),
+    bankIdRedirect: createBankIdRedirectMock({
+      authenticationtype: "urn:grn:authn:no:bankid",
+    }),
+  });
+  const client = await startApp(buildApp({
+    prisma,
+    Farm: createFarmMock(),
+    auth,
+    bankIdRouter,
+  }));
+
+  try {
+    const { response } = await client.request("/bankid/verifiser?code=abc&next=%2Flag-annonse");
+    assert.equal(response.status, 302);
+    assert.match(
+      response.headers.get("location"),
+      /^\/min-bruker\?error=BankID-verifiseringen\+mangler\+en\+gyldig\+brukeridentitet\./
+    );
+  } finally {
+    await client.close();
+  }
+});
+
+test("GET /bankid/verifiser rejects a BankID identity already linked to another user", async () => {
+  const prisma = createPrismaMock();
+  let upsertCalls = 0;
+  prisma.userVerification = {
+    findFirst: async () => ({ id: 99 }),
+    upsert: async () => {
+      upsertCalls += 1;
+    },
+  };
+  const currentUser = {
+    id: 23,
+    email: "duplicate@example.com",
+    fullName: "Duplicate Identity",
+    role: "BOTH",
+    status: "ACTIVE",
+    createdAt: new Date("2026-04-09T10:00:00Z"),
+    profile: {},
+    verifications: [],
+  };
+  const auth = createAuthMock({ currentUser });
+  const bankIdRouter = createBankIdRouter({
+    prisma,
+    auth,
+    env: createBankIdEnv(),
+    bankIdRedirect: createBankIdRedirectMock({
+      sub: "already-linked-subject",
+    }),
+  });
+  const client = await startApp(buildApp({
+    prisma,
+    Farm: createFarmMock(),
+    auth,
+    bankIdRouter,
+  }));
+
+  try {
+    const { response } = await client.request("/bankid/verifiser?code=abc&next=%2Flag-annonse");
+    assert.equal(response.status, 302);
+    assert.equal(
+      response.headers.get("location"),
+      "/min-bruker?error=Denne+BankID-en+er+allerede+knyttet+til+en+annen+bruker."
+    );
+    assert.equal(upsertCalls, 0);
+  } finally {
+    await client.close();
+  }
+});
+
+test("GET /bankid/verifiser falls back when next is unsafe", async () => {
+  const prisma = createPrismaMock();
+  prisma.userVerification = {
+    findFirst: async () => null,
+    upsert: async (args) => ({ id: 1, ...args.create }),
+  };
+  const currentUser = {
+    id: 24,
+    email: "safe-next@example.com",
+    fullName: "Safe Next",
+    role: "BOTH",
+    status: "ACTIVE",
+    createdAt: new Date("2026-04-09T10:00:00Z"),
+    profile: {},
+    verifications: [],
+  };
+  const auth = createAuthMock({ currentUser });
+  const bankIdRouter = createBankIdRouter({
+    prisma,
+    auth,
+    env: createBankIdEnv(),
+    bankIdRedirect: createBankIdRedirectMock({
+      sub: "safe-next-subject",
+    }),
+  });
+  const client = await startApp(buildApp({
+    prisma,
+    Farm: createFarmMock(),
+    auth,
+    bankIdRouter,
+  }));
+
+  try {
+    const { response } = await client.request("/bankid/verifiser?code=abc&next=https%3A%2F%2Fevil.example");
+    assert.equal(response.status, 302);
+    assert.equal(response.headers.get("location"), "/min-bruker?success=BankID-verifisering+er+fullf%C3%B8rt.");
   } finally {
     await client.close();
   }
@@ -914,7 +1239,7 @@ test("GET /auksjoner/:id renders the shared error view on unexpected failures", 
 test("POST /auksjoner normalizes form input before creating a listing", async () => {
   const Farm = createFarmMock();
   const calls = [];
-  const currentUser = {
+  const currentUser = withVerifiedIdentity({
     id: 10,
     email: "ola@example.com",
     fullName: "Ola Bonde",
@@ -922,7 +1247,7 @@ test("POST /auksjoner normalizes form input before creating a listing", async ()
     status: "ACTIVE",
     createdAt: new Date("2026-04-09T10:00:00Z"),
     profile: {},
-  };
+  });
   Farm.create = async (input) => {
     calls.push(input);
     return { id: 42 };
@@ -983,8 +1308,9 @@ test("POST /auksjoner normalizes form input before creating a listing", async ()
   }
 });
 
-test("POST /auksjoner renders the error page when create fails", async () => {
+test("POST /auksjoner redirects unverified users before creating a listing", async () => {
   const Farm = createFarmMock();
+  let createCalls = 0;
   const currentUser = {
     id: 10,
     email: "ola@example.com",
@@ -993,7 +1319,52 @@ test("POST /auksjoner renders the error page when create fails", async () => {
     status: "ACTIVE",
     createdAt: new Date("2026-04-09T10:00:00Z"),
     profile: {},
+    verifications: [],
   };
+  Farm.create = async () => {
+    createCalls += 1;
+    return { id: 42 };
+  };
+
+  const client = await startApp(buildApp({
+    prisma: createPrismaMock(),
+    Farm,
+    auth: createAuthMock({ currentUser }),
+  }));
+
+  try {
+    const { path, init } = postForm("/auksjoner", {
+      title: "Ny gård",
+      description: "Beskrivelse",
+      ownerName: "Ola Bonde",
+      municipality: "Råde",
+      fylke: "Østfold",
+      sizeDekar: "150.5",
+      auctionStart: "2026-04-01",
+      auctionEnd: "2026-04-10",
+      startingBid: "725",
+    });
+
+    const { response } = await client.request(path, init);
+    assert.equal(response.status, 302);
+    assert.equal(response.headers.get("location"), "/bankid/verifiser?next=%2Flag-annonse");
+    assert.equal(createCalls, 0);
+  } finally {
+    await client.close();
+  }
+});
+
+test("POST /auksjoner renders the error page when create fails", async () => {
+  const Farm = createFarmMock();
+  const currentUser = withVerifiedIdentity({
+    id: 10,
+    email: "ola@example.com",
+    fullName: "Ola Bonde",
+    role: "BOTH",
+    status: "ACTIVE",
+    createdAt: new Date("2026-04-09T10:00:00Z"),
+    profile: {},
+  });
   Farm.create = async () => {
     throw new Error("create failed");
   };
@@ -1028,7 +1399,7 @@ test("POST /auksjoner renders the error page when create fails", async () => {
 });
 
 test("POST /auksjoner/:id/bid returns 404 when the auction does not exist", async () => {
-  const currentUser = {
+  const currentUser = withVerifiedIdentity({
     id: 12,
     email: "kari@example.com",
     fullName: "Kari",
@@ -1036,7 +1407,7 @@ test("POST /auksjoner/:id/bid returns 404 when the auction does not exist", asyn
     status: "ACTIVE",
     createdAt: new Date("2026-04-09T10:00:00Z"),
     profile: {},
-  };
+  });
   const client = await startApp(buildApp({
     prisma: createPrismaMock(),
     Farm: createFarmMock(),
@@ -1057,9 +1428,10 @@ test("POST /auksjoner/:id/bid returns 404 when the auction does not exist", asyn
   }
 });
 
-test("POST /auksjoner/:id/bid places a bid when there is no current bid yet", async () => {
+test("POST /auksjoner/:id/bid redirects unverified users before bid lookup", async () => {
   const Farm = createFarmMock();
-  const calls = [];
+  let findCalls = 0;
+  let updateCalls = 0;
   const currentUser = {
     id: 12,
     email: "kari@example.com",
@@ -1068,7 +1440,49 @@ test("POST /auksjoner/:id/bid places a bid when there is no current bid yet", as
     status: "ACTIVE",
     createdAt: new Date("2026-04-09T10:00:00Z"),
     profile: {},
+    verifications: [],
   };
+  Farm.findById = async () => {
+    findCalls += 1;
+    return { id: 5, currentBid: 0 };
+  };
+  Farm.updateBid = async () => {
+    updateCalls += 1;
+  };
+
+  const client = await startApp(buildApp({
+    prisma: createPrismaMock(),
+    Farm,
+    auth: createAuthMock({ currentUser }),
+  }));
+
+  try {
+    const { path, init } = postForm("/auksjoner/5/bid", {
+      bidAmount: "810",
+    });
+
+    const { response } = await client.request(path, init);
+    assert.equal(response.status, 302);
+    assert.equal(response.headers.get("location"), "/bankid/verifiser?next=%2Fauksjoner%2F5");
+    assert.equal(findCalls, 0);
+    assert.equal(updateCalls, 0);
+  } finally {
+    await client.close();
+  }
+});
+
+test("POST /auksjoner/:id/bid places a bid when there is no current bid yet", async () => {
+  const Farm = createFarmMock();
+  const calls = [];
+  const currentUser = withVerifiedIdentity({
+    id: 12,
+    email: "kari@example.com",
+    fullName: "Kari",
+    role: "BOTH",
+    status: "ACTIVE",
+    createdAt: new Date("2026-04-09T10:00:00Z"),
+    profile: {},
+  });
   Farm.findById = async () => ({ id: 5, currentBid: 0 });
   Farm.updateBid = async (...args) => {
     calls.push(args);
@@ -1097,7 +1511,7 @@ test("POST /auksjoner/:id/bid places a bid when there is no current bid yet", as
 test("POST /auksjoner/:id/bid ignores bids that are not above the current bid", async () => {
   const Farm = createFarmMock();
   let updateCalls = 0;
-  const currentUser = {
+  const currentUser = withVerifiedIdentity({
     id: 12,
     email: "kari@example.com",
     fullName: "Kari",
@@ -1105,7 +1519,7 @@ test("POST /auksjoner/:id/bid ignores bids that are not above the current bid", 
     status: "ACTIVE",
     createdAt: new Date("2026-04-09T10:00:00Z"),
     profile: {},
-  };
+  });
   Farm.findById = async () => ({ id: 6, currentBid: 900 });
   Farm.updateBid = async () => {
     updateCalls += 1;
@@ -1134,7 +1548,7 @@ test("POST /auksjoner/:id/bid ignores bids that are not above the current bid", 
 
 test("POST /auksjoner/:id/bid renders the shared error view on bid failures", async () => {
   const Farm = createFarmMock();
-  const currentUser = {
+  const currentUser = withVerifiedIdentity({
     id: 12,
     email: "kari@example.com",
     fullName: "Kari",
@@ -1142,7 +1556,7 @@ test("POST /auksjoner/:id/bid renders the shared error view on bid failures", as
     status: "ACTIVE",
     createdAt: new Date("2026-04-09T10:00:00Z"),
     profile: {},
-  };
+  });
   Farm.findById = async () => ({ id: 8, currentBid: 100 });
   Farm.updateBid = async () => {
     throw new Error("bid failed");

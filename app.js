@@ -9,13 +9,17 @@ const methodOverride = require("method-override");
 const path = require("path");
 const prisma = require("./prisma/client");
 const defaultAuth = require("./lib/auth");
+const { createSessionMiddleware } = require("./lib/session");
 const { createIndexRouter } = require("./routes/index");
+const { createBankIdRouter } = require("./routes/bankid");
 const { createFarmRouter } = require("./routes/farms");
 const { createAdminRouter } = require("./routes/admin");
 
 function createApp({
   auth = defaultAuth,
+  sessionMiddleware = createSessionMiddleware(),
   indexRouter = createIndexRouter({ auth }),
+  bankIdRouter = createBankIdRouter({ auth }),
   farmRouter = createFarmRouter({ auth }),
   adminRouter = createAdminRouter({ auth }),
 } = {}) {
@@ -27,6 +31,7 @@ function createApp({
   app.use(express.json());                         // Parse JSON
   app.use(methodOverride("_method"));              // Support PUT/DELETE from forms
   app.use(express.static(path.join(__dirname, "public"))); // Serve static files
+  app.use(sessionMiddleware);
   app.use(auth.attachCurrentUser);
 
   // ---- View Engine ----
@@ -34,6 +39,7 @@ function createApp({
   app.set("views", path.join(__dirname, "views"));
 
   // ---- Routes ----
+  app.use("/", bankIdRouter);
   app.use("/", indexRouter);
   app.use("/auksjoner", farmRouter);
   app.use("/admin", adminRouter);

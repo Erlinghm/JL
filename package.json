@@ -16,14 +16,19 @@
     "db:studio": "prisma studio"
   },
   "dependencies": {
+    "@criipto/signatures": "^1.31.0",
+    "@criipto/verify-express": "^1.0.4",
     "@prisma/client": "^5.7.0",
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.103.0",
+    "connect-pg-simple": "^10.0.0",
     "cookie": "^1.1.1",
     "dotenv": "^16.0.3",
     "ejs": "^3.1.9",
     "express": "^4.18.2",
-    "method-override": "^3.0.0"
+    "express-session": "^1.19.0",
+    "method-override": "^3.0.0",
+    "pg": "^8.20.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1",
