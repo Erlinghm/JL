@@ -222,6 +222,26 @@ function highlightNav() {
   });
 }
 
+// ---- Slik fungerer det – fane-bytte ----
+function initHowTabs() {
+  const tabs     = document.querySelectorAll(".how-tab");
+  const contents = document.querySelectorAll(".how-content");
+  if (!tabs.length) return;
+
+  tabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      const target = tab.dataset.tab;
+
+      tabs.forEach((t) => t.classList.remove("how-tab--active"));
+      tab.classList.add("how-tab--active");
+
+      contents.forEach((c) => c.classList.add("how-content--hidden"));
+      const active = document.getElementById("how-" + target);
+      if (active) active.classList.remove("how-content--hidden");
+    });
+  });
+}
+
 // ---- Run everything on page load ----
 document.addEventListener("DOMContentLoaded", () => {
   startCountdowns();
@@ -230,4 +250,5 @@ document.addEventListener("DOMContentLoaded", () => {
   initDrawMap();
   initFilters();
   highlightNav();
+  initHowTabs();
 });

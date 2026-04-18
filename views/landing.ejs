@@ -35,31 +35,33 @@
 
   <!-- ===== HERO ===== -->
   <section class="lp-hero">
-    <div class="lp-hero-inner lp-hero-triple">
-      <div class="lp-hero-image">
-        <img src="/images/hero-farm-illustration2.png" alt="Jordbruk – traktorer, grønnsaker og moderne verktøy for jordleie" />
+
+    <div class="lp-hero-img-left" aria-hidden="true">
+      <img src="/images/hero-farm-illustration2.png" alt="">
+    </div>
+
+    <div class="lp-hero-text">
+      <div class="lp-hero-eyebrow">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22l1-2.3A4.49 4.49 0 0 0 8 20C19 20 22 3 22 3c-1 2-8 2-8 2s2-6-7-4z"/>
+        </svg>
+        Norges nye jordleiemarked
       </div>
-      <div class="lp-hero-text">
-        <div class="lp-hero-eyebrow">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22l1-2.3A4.49 4.49 0 0 0 8 20C19 20 22 3 22 3c-1 2-8 2-8 2s2-6-7-4z"/>
-          </svg>
-          Norges nye jordleiemarked
-        </div>
-        <h1>Fremtidens<br><em>jordleie</em><br>starter her.</h1>
-        <p class="lp-hero-sub">
-          Jordleie.no kobler grunneiere og bønder gjennom åpne, transparente auksjoner.
-          Finn ledig jord i hele Norge – eller legg ut ditt areal i dag.
-        </p>
-        <div class="lp-hero-ctas">
-          <a href="/logg-inn" class="btn-primary">Se auksjoner →</a>
-          <a href="/lag-annonse" class="btn-outline">Legg ut din jord</a>
-        </div>
-      </div>
-      <div class="lp-hero-image lp-hero-image--mirrored">
-        <img src="/images/hero-farm-illustration2.png" alt="Jordbruk – traktorer, grønnsaker og moderne verktøy for jordleie" />
+      <h1>Fremtidens<br><em>jordleie</em><br>starter her.</h1>
+      <p class="lp-hero-sub">
+        Jordleie.no kobler grunneiere og bønder gjennom åpne, transparente auksjoner.
+        Finn ledig jord i hele Norge – eller legg ut ditt areal i dag.
+      </p>
+      <div class="lp-hero-ctas">
+        <a href="/logg-inn" class="btn-primary">Se auksjoner →</a>
+        <a href="/lag-annonse" class="btn-outline">Legg ut din jord</a>
       </div>
     </div>
+
+    <div class="lp-hero-img-right" aria-hidden="true">
+      <img src="/images/hero-farm-illustration2.png" alt="">
+    </div>
+
   </section>
 
   <!-- ===== STATS BAR ===== -->
@@ -85,41 +87,70 @@
   </div>
 
   <!-- ===== HOW IT WORKS ===== -->
-  <section class="lp-section" id="slik-fungerer-det">
-    <div class="lp-section-inner">
-      <div class="lp-section-header">
-        <span class="lp-label">Slik fungerer det</span>
-        <h2 class="lp-section-title">Enkelt for alle parter</h2>
-        <p class="lp-section-desc">
-          Fra registrering til signert leieavtale – alt på én plattform.
-          Ingen ringerunder, ingen papirarbeid.
-        </p>
-      </div>
-      <div class="lp-process-grid">
+  <section class="how-section" id="slik-fungerer-det">
+    <div class="how-inner">
 
-        <div class="lp-process-card">
-          <span class="lp-process-num">01</span>
-          <div class="lp-process-badge">01</div>
-          <h3>Registrer deg</h3>
-          <p>Opprett en gratis profil som grunneier eller leietaker. Vi verifiserer identitet og gårdsbruk for trygg handel.</p>
+      <h2 class="how-heading">Slik fungerer det</h2>
+
+      <div class="how-entries">
+
+        <!-- 01: bilde venstre | spine | tekst høyre -->
+        <div class="how-entry">
+          <div class="how-entry-media">
+            <img class="how-img" src="/images/sfd_1.png" alt="Registrer deg">
+          </div>
+          <div class="how-entry-spine">
+            <div class="how-marker">01</div>
+          </div>
+          <div class="how-entry-text">
+            <h3 class="how-title">Registrer deg</h3>
+            <ul class="how-list">
+              <li>Opprett en gratis konto på Jordleie.no</li>
+              <li>Legg inn informasjon om deg og din eiendom</li>
+              <li>Vi verifiserer identitet og gårdsbruk for trygg handel</li>
+            </ul>
+          </div>
         </div>
 
-        <div class="lp-process-card">
-          <span class="lp-process-num">02</span>
-          <div class="lp-process-badge">02</div>
-          <h3>Finn eller annonser</h3>
-          <p>Søk etter ledige arealer i ditt fylke, eller publiser din jord med interaktivt kart, beskrivelse og auksjonsvilkår på minutter.</p>
+        <!-- 02: tekst venstre | spine | bilde høyre (row-reverse) -->
+        <div class="how-entry how-entry--flip">
+          <div class="how-entry-media">
+            <img class="how-img" src="/images/sfd_2.png" alt="Finn eller legg ut">
+          </div>
+          <div class="how-entry-spine">
+            <div class="how-marker">02</div>
+          </div>
+          <div class="how-entry-text">
+            <h3 class="how-title">Finn eller legg ut</h3>
+            <ul class="how-list">
+              <li>Søk etter ledige arealer i ditt fylke</li>
+              <li>Eller publiser din jord med kart og auksjonsvilkår</li>
+              <li>Velg startpris, varighet og leiebetingelser</li>
+            </ul>
+          </div>
         </div>
 
-        <div class="lp-process-card">
-          <span class="lp-process-num">03</span>
-          <div class="lp-process-badge">03</div>
-          <h3>Bud og avtale</h3>
-          <p>Legg inn bud, vinn auksjonen og inngå digital leieavtale. Alt er transparent og trygt – ingen overraskelser.</p>
+        <!-- 03: bilde venstre | spine | tekst høyre -->
+        <div class="how-entry">
+          <div class="how-entry-media">
+            <img class="how-img" src="/images/sfd_3.png" alt="Bud og avtale">
+          </div>
+          <div class="how-entry-spine">
+            <div class="how-marker">03</div>
+          </div>
+          <div class="how-entry-text">
+            <h3 class="how-title">Bud og avtale</h3>
+            <ul class="how-list">
+              <li>Legg inn bud og følg auksjonen i sanntid</li>
+              <li>Høyeste bud vinner når auksjonen avsluttes</li>
+              <li>Inngå digital leieavtale direkte mellom partene</li>
+            </ul>
+          </div>
         </div>
 
-      </div>
-    </div>
+      </div><!-- /how-entries -->
+
+    </div><!-- /how-inner -->
   </section>
 
   <!-- ===== COMPARISON ===== -->
@@ -540,7 +571,7 @@
     <h2>Klar til å komme i gang?</h2>
     <p>Registrer deg gratis og legg ut ditt første areal – eller finn jord i ditt fylke i dag.</p>
     <div class="lp-cta-actions">
-      <a href="/lag-annonse" class="btn-cta-primary">Legg ut jord</a>
+      <a href="/lag-annonse" class="btn-register">Registrer deg</a>
       <a href="/logg-inn" class="btn-cta-outline">Finn jord til leie</a>
     </div>
   </section>

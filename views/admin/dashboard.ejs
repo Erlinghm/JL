@@ -1,0 +1,86 @@
+<%- include('../partials/head') %>
+<%- include('../partials/sidebar') %>
+
+<div class="app-page">
+
+  <div class="page-intro">
+    <div class="page-intro-inner">
+      <div>
+        <div class="page-intro-eyebrow">Administrasjon</div>
+        <h1>Admin-panel</h1>
+        <p class="page-intro-desc">Administrer alle gårdsannonser på Jordleie.no.</p>
+      </div>
+      <div style="display:flex; gap:0.75rem; flex-shrink:0;">
+        <a href="/admin/annonser/ny" class="btn-primary" style="white-space:nowrap;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+          + Ny annonse
+        </a>
+        <form action="/admin/logg-ut" method="POST">
+          <button type="submit" class="btn-secondary" style="white-space:nowrap;">Logg ut</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="ap-listings" style="padding: 2rem;">
+    <% if (farms.length === 0) { %>
+      <p style="color: var(--text-muted);">Ingen annonser funnet.</p>
+    <% } else { %>
+      <table style="width:100%; border-collapse:collapse; font-size:0.95rem;">
+        <thead>
+          <tr style="border-bottom: 2px solid var(--border-color, #e5e7eb); text-align:left;">
+            <th style="padding: 0.75rem 1rem;">Tittel</th>
+            <th style="padding: 0.75rem 1rem;">Fylke</th>
+            <th style="padding: 0.75rem 1rem;">Status</th>
+            <th style="padding: 0.75rem 1rem;">Auksjon avsluttes</th>
+            <th style="padding: 0.75rem 1rem;">Handlinger</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% farms.forEach(function(f) { %>
+            <tr style="border-bottom: 1px solid var(--border-color, #e5e7eb);">
+              <td style="padding: 0.75rem 1rem;"><%= f.title %></td>
+              <td style="padding: 0.75rem 1rem;"><%= f.fylke %></td>
+              <td style="padding: 0.75rem 1rem;">
+                <span style="
+                  display:inline-block;
+                  padding: 0.2rem 0.6rem;
+                  border-radius: 9999px;
+                  font-size: 0.8rem;
+                  font-weight: 600;
+                  background: <%= f.status === 'aktiv' ? '#d1fae5' : f.status === 'kommende' ? '#dbeafe' : '#f3f4f6' %>;
+                  color: <%= f.status === 'aktiv' ? '#065f46' : f.status === 'kommende' ? '#1e40af' : '#374151' %>;
+                ">
+                  <%= f.status %>
+                </span>
+              </td>
+              <td style="padding: 0.75rem 1rem;">
+                <%= new Date(f.auctionEnd).toLocaleDateString('nb-NO') %>
+              </td>
+              <td style="padding: 0.75rem 1rem; display:flex; gap:0.5rem; align-items:center;">
+                <a href="/admin/annonser/<%= f.id %>/rediger" class="btn-secondary" style="font-size:0.85rem; padding:0.3rem 0.75rem;">
+                  Rediger
+                </a>
+                <form action="/admin/annonser/<%= f.id %>?_method=DELETE" method="POST" onsubmit="return confirm('Er du sikker på at du vil slette denne annonsen?');">
+                  <button type="submit" style="
+                    font-size:0.85rem;
+                    padding:0.3rem 0.75rem;
+                    border: 1px solid #fca5a5;
+                    background: #fff;
+                    color: #dc2626;
+                    border-radius: 6px;
+                    cursor: pointer;
+                  ">
+                    Slett
+                  </button>
+                </form>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    <% } %>
+  </div>
+
+  <%- include('../partials/footer') %>
+</div>

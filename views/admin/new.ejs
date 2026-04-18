@@ -1,0 +1,130 @@
+<%- include('../partials/head') %>
+<%- include('../partials/sidebar') %>
+
+<div class="app-page">
+
+  <div class="page-intro">
+    <div class="page-intro-inner">
+      <div>
+        <div class="page-intro-eyebrow">Administrasjon</div>
+        <h1>Ny annonse</h1>
+        <p class="page-intro-desc">Opprett en ny gårdsannonse.</p>
+      </div>
+      <a href="/admin/dashboard" class="btn-secondary" style="white-space:nowrap; flex-shrink:0;">
+        ← Tilbake til oversikten
+      </a>
+    </div>
+  </div>
+
+  <div style="padding: 2rem; max-width: 720px;">
+    <form action="/admin/annonser" method="POST">
+
+      <fieldset style="border:none; padding:0; margin-bottom:2rem;">
+        <legend style="font-weight:700; font-size:1.1rem; margin-bottom:1rem;">Om gården</legend>
+
+        <div style="margin-bottom:1rem;">
+          <label for="title">Tittel *</label><br>
+          <input type="text" id="title" name="title" required style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:6px; margin-top:0.25rem;">
+        </div>
+
+        <div style="margin-bottom:1rem;">
+          <label for="description">Beskrivelse *</label><br>
+          <textarea id="description" name="description" rows="4" required style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:6px; margin-top:0.25rem;"></textarea>
+        </div>
+
+        <div style="margin-bottom:1rem;">
+          <label for="ownerName">Eiers navn *</label><br>
+          <input type="text" id="ownerName" name="ownerName" required style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:6px; margin-top:0.25rem;">
+        </div>
+
+        <div style="margin-bottom:1rem;">
+          <label for="ownerDescription">Om eier</label><br>
+          <textarea id="ownerDescription" name="ownerDescription" rows="2" style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:6px; margin-top:0.25rem;"></textarea>
+        </div>
+      </fieldset>
+
+      <fieldset style="border:none; padding:0; margin-bottom:2rem;">
+        <legend style="font-weight:700; font-size:1.1rem; margin-bottom:1rem;">Beliggenhet</legend>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+          <div>
+            <label for="municipality">Kommune *</label><br>
+            <input type="text" id="municipality" name="municipality" required style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:6px; margin-top:0.25rem;">
+          </div>
+          <div>
+            <label for="fylke">Fylke *</label><br>
+            <input type="text" id="fylke" name="fylke" required style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:6px; margin-top:0.25rem;">
+          </div>
+        </div>
+
+        <div style="margin-bottom:1rem;">
+          <label for="address">Adresse</label><br>
+          <input type="text" id="address" name="address" style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:6px; margin-top:0.25rem;">
+        </div>
+      </fieldset>
+
+      <fieldset style="border:none; padding:0; margin-bottom:2rem;">
+        <legend style="font-weight:700; font-size:1.1rem; margin-bottom:1rem;">Areal og jordkvalitet</legend>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+          <div>
+            <label for="sizeDekar">Størrelse (dekar) *</label><br>
+            <input type="number" id="sizeDekar" name="sizeDekar" min="0" step="0.1" required style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:6px; margin-top:0.25rem;">
+          </div>
+          <div>
+            <label for="soilType">Jordtype *</label><br>
+            <input type="text" id="soilType" name="soilType" required style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:6px; margin-top:0.25rem;">
+          </div>
+        </div>
+
+        <div style="margin-bottom:1rem;">
+          <label for="soilQuality">Jordkvalitet *</label><br>
+          <input type="text" id="soilQuality" name="soilQuality" required style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:6px; margin-top:0.25rem;">
+        </div>
+      </fieldset>
+
+      <fieldset style="border:none; padding:0; margin-bottom:2rem;">
+        <legend style="font-weight:700; font-size:1.1rem; margin-bottom:1rem;">Auksjon</legend>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+          <div>
+            <label for="auctionStart">Auksjon starter *</label><br>
+            <input type="date" id="auctionStart" name="auctionStart" required style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:6px; margin-top:0.25rem;">
+          </div>
+          <div>
+            <label for="auctionEnd">Auksjon avsluttes *</label><br>
+            <input type="date" id="auctionEnd" name="auctionEnd" required style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:6px; margin-top:0.25rem;">
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+          <div>
+            <label for="startingBid">Startpris (kr/dekar) *</label><br>
+            <input type="number" id="startingBid" name="startingBid" min="0" step="1" required style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:6px; margin-top:0.25rem;">
+          </div>
+          <div>
+            <label for="rentalPeriodYears">Leieperiode (år) *</label><br>
+            <input type="number" id="rentalPeriodYears" name="rentalPeriodYears" min="1" required style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:6px; margin-top:0.25rem;">
+          </div>
+        </div>
+
+        <div style="margin-bottom:1rem;">
+          <label for="status">Status *</label><br>
+          <select id="status" name="status" required style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:6px; margin-top:0.25rem;">
+            <option value="kommende">Kommende</option>
+            <option value="aktiv">Aktiv</option>
+            <option value="avsluttet">Avsluttet</option>
+          </select>
+        </div>
+      </fieldset>
+
+      <div style="display:flex; gap:1rem;">
+        <button type="submit" class="btn-primary">Opprett annonse</button>
+        <a href="/admin/dashboard" class="btn-secondary">Avbryt</a>
+      </div>
+
+    </form>
+  </div>
+
+  <%- include('../partials/footer') %>
+</div>

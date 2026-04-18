@@ -99,7 +99,7 @@ function buildSession(user, overrides = {}) {
   };
 }
 
-test("signInWithPassword persists long-lived session cookies and syncs trusted admin metadata", async () => {
+test("signInWithPassword persists long-lived session cookies without granting admin from metadata", async () => {
   await withSupabaseEnv(async () => {
     const authUser = {
       id: "auth-1",
@@ -140,8 +140,53 @@ test("signInWithPassword persists long-lived session cookies and syncs trusted a
 
     assert.equal(calls.create.length, 1);
     assert.equal(calls.create[0].data.email, "alice@example.com");
-    assert.equal(calls.create[0].data.isAdmin, true);
+    assert.equal(calls.create[0].data.isAdmin, false);
     assert.equal(result.user.email, "alice@example.com");
+  });
+});
+
+test("syncing an existing user preserves the Supabase is_admin column", async () => {
+  await withSupabaseEnv(async () => {
+    const authUser = {
+      id: "auth-admin",
+      email: "admin@example.com",
+      app_metadata: {},
+      user_metadata: { full_name: "Admin Example" },
+    };
+    const existingUser = {
+      id: 42,
+      authUserId: "auth-admin",
+      email: "admin@example.com",
+      fullName: "Admin Example",
+      phone: null,
+      isAdmin: true,
+      profile: {},
+    };
+    const session = buildSession(authUser);
+    const { prisma, calls } = createPrismaMock(existingUser);
+    const auth = createAuth({
+      prisma,
+      createSupabaseClient: () => ({
+        auth: {
+          signInWithPassword: async () => ({
+            data: { user: authUser, session },
+            error: null,
+          }),
+        },
+      }),
+    });
+    const res = createResponse();
+
+    const result = await auth.signInWithPassword({
+      email: "admin@example.com",
+      password: "supersecret",
+      res,
+    });
+
+    assert.equal(calls.update.length, 1);
+    assert.equal(Object.hasOwn(calls.update[0].data, "isAdmin"), false);
+    assert.equal(result.user.isAdmin, true);
+    assert.equal(auth.isAdminUser(result.user, authUser), true);
   });
 });
 

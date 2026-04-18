@@ -11,6 +11,7 @@ const prisma = require("./prisma/client");
 const defaultAuth = require("./lib/auth");
 const { createIndexRouter } = require("./routes/index");
 const { createFarmRouter } = require("./routes/farms");
+const { createAdminRouter } = require("./routes/admin");
 const { createBankIdRouter } = require("./routes/bankid");
 const { createLeaseRouter } = require("./routes/leases");
 
@@ -18,6 +19,7 @@ function createApp({
   auth = defaultAuth,
   indexRouter = createIndexRouter({ auth }),
   farmRouter = createFarmRouter({ auth }),
+  adminRouter = createAdminRouter({ auth }),
   bankIdRouter = createBankIdRouter({ auth }),
   leaseRouter = createLeaseRouter({ auth }),
 } = {}) {
@@ -40,6 +42,7 @@ function createApp({
   app.use("/", bankIdRouter);
   app.use("/", leaseRouter);
   app.use("/auksjoner", farmRouter);
+  app.use("/admin", adminRouter);
 
   // ---- 404 Handler ----
   app.use((req, res) => {
