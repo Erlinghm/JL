@@ -164,6 +164,18 @@ function createBankIdRouter({ prisma = defaultPrisma, auth = defaultAuth } = {})
         });
       }
 
+      // Lagre fødselsdato frå BankID til UserProfile (overstyrer evt. manuelt innskriven dato)
+      if (identity.birthdate && /^\d{4}-\d{2}-\d{2}$/.test(identity.birthdate)) {
+        const birthDate = new Date(identity.birthdate);
+        if (!Number.isNaN(birthDate.getTime())) {
+          await prisma.userProfile.upsert({
+            where: { userId: req.currentUser.id },
+            update: { birthDate },
+            create: { userId: req.currentUser.id, birthDate },
+          });
+        }
+      }
+
       return res.redirect(
         "/min-bruker?success=" +
           encodeURIComponent("Identiteten din er bekreftet med BankID! ✓")

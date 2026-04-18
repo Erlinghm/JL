@@ -19,6 +19,7 @@ const listingInclude = {
     include: { bidder: true },
     orderBy: { createdAt: "desc" },
   },
+  lease: { select: { id: true } },
 };
 
 function slugify(value) {
@@ -79,6 +80,10 @@ function viewStatusFromListing(status) {
   }
 }
 
+function sumAreaByType(parcels = [], key) {
+  return parcels.reduce((sum, parcel) => sum + (Number(parcel[key]) || 0), 0);
+}
+
 function toView(listing) {
   if (!listing) return null;
 
@@ -98,12 +103,22 @@ function toView(listing) {
     createdAt: bid.createdAt,
   }));
 
+  // Matrikler er parcels med gnr/bnr
+  const matrikler = parcels
+    .filter((p) => p.gnr || p.bnr || p.matrikkelNote)
+    .map((p) => ({
+      gnr: p.gnr,
+      bnr: p.bnr,
+      matrikkelNote: p.matrikkelNote || null,
+    }));
+
   return {
     id: listing.id,
     _id: listing.id,
     farmId: farm.id,
     title: farm.title,
     description: farm.description,
+    ownerUserId: listing.ownerUserId ?? farm.ownerUserId ?? owner.id ?? null,
     ownerName: owner.fullName || "Ukjent",
     ownerDescription: profile.bio || null,
     municipality: farm.municipality,
@@ -113,6 +128,11 @@ function toView(listing) {
     lng: farm.centroidLng ?? DEFAULT_LNG,
     fieldPolygon,
     sizeDekar,
+    areaFulldyrka: sumAreaByType(parcels, "areaFulldyrkaDekar"),
+    areaOverflatedyrka: sumAreaByType(parcels, "areaOverflatedyrkaDekar"),
+    areaInnmarksbeite: sumAreaByType(parcels, "areaInnmarksbeiteDekar"),
+    areaAnna: sumAreaByType(parcels, "areaAnnaDekar"),
+    matrikler,
     soilType: farm.soilType || DEFAULT_SOIL_TYPE,
     soilQuality: farm.soilQuality || DEFAULT_SOIL_QUALITY,
     soilComposition,
@@ -122,9 +142,26 @@ function toView(listing) {
     currentBid: listing.currentBidPerDekarYear,
     rentalPeriodYears: listing.rentalPeriodYears,
     status: viewStatusFromListing(listing.status),
+    rawStatus: listing.status,
+    hasLease: Boolean(listing.lease),
     cropTypes: (farm.cropTypes || []).map((link) => link.cropType.name),
     bids,
     createdAt: listing.createdAt,
+    // Kontrakts- og tilstandsfelt
+    paymentDueDate: listing.paymentDueDate || null,
+    firstDueDate: listing.firstDueDate || null,
+    vatApplies: Boolean(listing.vatApplies),
+    indexRegulation: Boolean(listing.indexRegulation),
+    indexType: listing.indexType || null,
+    indexStartYear: listing.indexStartYear || null,
+    indexBaseYear: listing.indexBaseYear || null,
+    hasConditionReport: Boolean(listing.hasConditionReport),
+    hasFloghavre: listing.hasFloghavre, // kan vere null
+    hasSoilSamples: Boolean(listing.hasSoilSamples),
+    hasFertilizerPlan: Boolean(listing.hasFertilizerPlan),
+    conditionNotes: listing.conditionNotes || null,
+    additionalTerms: listing.additionalTerms || null,
+    specialTerms: listing.specialTerms || null,
   };
 }
 
@@ -304,6 +341,11 @@ function createFarmModel(prisma = defaultPrisma) {
       lng,
       fieldPolygon,
       sizeDekar,
+      areaFulldyrka,
+      areaOverflatedyrka,
+      areaInnmarksbeite,
+      areaAnna,
+      matrikler = [],
       soilType,
       soilQuality,
       soilComposition,
@@ -313,6 +355,21 @@ function createFarmModel(prisma = defaultPrisma) {
       currentBid,
       rentalPeriodYears,
       status,
+      // Nye kontraktsfelt
+      paymentDueDate,
+      firstDueDate,
+      vatApplies,
+      indexRegulation,
+      indexType,
+      indexStartYear,
+      indexBaseYear,
+      hasConditionReport,
+      hasFloghavre,
+      hasSoilSamples,
+      hasFertilizerPlan,
+      conditionNotes,
+      additionalTerms,
+      specialTerms,
     } = data;
 
     const auctionStartAt = new Date(auctionStart);
@@ -329,6 +386,20 @@ function createFarmModel(prisma = defaultPrisma) {
     const listingStatus = listingStatusFromInput(status, auctionStartAt, auctionEndAt);
     const polygon = parseJson(fieldPolygon, []);
     const composition = parseJson(soilComposition, DEFAULT_SOIL_COMPOSITION);
+
+    // Rekn ut sum av arealfordelinga; fall tilbake til sizeDekar om fordelinga er tom
+    const areaByType = {
+      areaFulldyrkaDekar: Number(areaFulldyrka) || 0,
+      areaOverflatedyrkaDekar: Number(areaOverflatedyrka) || 0,
+      areaInnmarksbeiteDekar: Number(areaInnmarksbeite) || 0,
+      areaAnnaDekar: Number(areaAnna) || 0,
+    };
+    const sumByType =
+      areaByType.areaFulldyrkaDekar +
+      areaByType.areaOverflatedyrkaDekar +
+      areaByType.areaInnmarksbeiteDekar +
+      areaByType.areaAnnaDekar;
+    const totalArea = sumByType > 0 ? sumByType : Number(sizeDekar) || 0;
 
     const listing = await prisma.$transaction(async (tx) => {
       const owner = await resolveOwnerUser(tx, {
@@ -353,15 +424,49 @@ function createFarmModel(prisma = defaultPrisma) {
         },
       });
 
-      await tx.farmParcel.create({
-        data: {
-          farmId: farm.id,
-          name: title,
-          areaDekar: Number(sizeDekar) || 0,
-          polygonJson: polygon,
-          soilCompositionJson: composition,
-        },
-      });
+      // Opprett éin parcel per matrikkel. Dersom ingen matrikkel er oppgitt,
+      // opprett ein samleparcel med heile arealet.
+      if (matrikler.length > 0) {
+        // Distribuer arealfordelinga likt over matriklane (kan raffinerast seinare)
+        const count = matrikler.length;
+        const perParcel = {
+          areaDekar: totalArea / count,
+          areaFulldyrkaDekar: areaByType.areaFulldyrkaDekar / count,
+          areaOverflatedyrkaDekar: areaByType.areaOverflatedyrkaDekar / count,
+          areaInnmarksbeiteDekar: areaByType.areaInnmarksbeiteDekar / count,
+          areaAnnaDekar: areaByType.areaAnnaDekar / count,
+        };
+        for (let i = 0; i < matrikler.length; i++) {
+          const m = matrikler[i];
+          await tx.farmParcel.create({
+            data: {
+              farmId: farm.id,
+              name: title + (count > 1 ? ` (gnr ${m.gnr || "?"}/bnr ${m.bnr || "?"})` : ""),
+              areaDekar: perParcel.areaDekar,
+              polygonJson: i === 0 ? polygon : [], // Berre fyrste parcel får kartet (inntil videre)
+              soilCompositionJson: composition,
+              gnr: m.gnr || null,
+              bnr: m.bnr || null,
+              matrikkelNote: m.matrikkelNote || null,
+              areaFulldyrkaDekar: perParcel.areaFulldyrkaDekar,
+              areaOverflatedyrkaDekar: perParcel.areaOverflatedyrkaDekar,
+              areaInnmarksbeiteDekar: perParcel.areaInnmarksbeiteDekar,
+              areaAnnaDekar: perParcel.areaAnnaDekar,
+            },
+          });
+        }
+      } else {
+        await tx.farmParcel.create({
+          data: {
+            farmId: farm.id,
+            name: title,
+            areaDekar: totalArea,
+            polygonJson: polygon,
+            soilCompositionJson: composition,
+            ...areaByType,
+          },
+        });
+      }
 
       await ensureCropLinks(tx, farm.id, cropTypes);
 
@@ -376,6 +481,20 @@ function createFarmModel(prisma = defaultPrisma) {
           auctionStartAt,
           auctionEndAt,
           publishedAt: new Date(),
+          paymentDueDate: paymentDueDate || null,
+          firstDueDate: firstDueDate || null,
+          vatApplies: Boolean(vatApplies),
+          indexRegulation: Boolean(indexRegulation),
+          indexType: indexType || null,
+          indexStartYear: indexStartYear || null,
+          indexBaseYear: indexBaseYear || null,
+          hasConditionReport: Boolean(hasConditionReport),
+          hasFloghavre: hasFloghavre === null || hasFloghavre === undefined ? null : Boolean(hasFloghavre),
+          hasSoilSamples: Boolean(hasSoilSamples),
+          hasFertilizerPlan: Boolean(hasFertilizerPlan),
+          conditionNotes: conditionNotes || null,
+          additionalTerms: additionalTerms || null,
+          specialTerms: specialTerms || null,
         },
       });
     });

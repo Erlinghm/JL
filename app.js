@@ -12,12 +12,14 @@ const defaultAuth = require("./lib/auth");
 const { createIndexRouter } = require("./routes/index");
 const { createFarmRouter } = require("./routes/farms");
 const { createBankIdRouter } = require("./routes/bankid");
+const { createLeaseRouter } = require("./routes/leases");
 
 function createApp({
   auth = defaultAuth,
   indexRouter = createIndexRouter({ auth }),
   farmRouter = createFarmRouter({ auth }),
   bankIdRouter = createBankIdRouter({ auth }),
+  leaseRouter = createLeaseRouter({ auth }),
 } = {}) {
   const app = express();
   app.set("trust proxy", 1);
@@ -36,6 +38,7 @@ function createApp({
   // ---- Routes ----
   app.use("/", indexRouter);
   app.use("/", bankIdRouter);
+  app.use("/", leaseRouter);
   app.use("/auksjoner", farmRouter);
 
   // ---- 404 Handler ----

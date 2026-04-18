@@ -98,14 +98,18 @@ model User {
 }
 
 model UserProfile {
-  userId             Int     @id
+  userId             Int       @id
   county             String?
   bio                String?
   avatarUrl          String?
   farmerType         String?
   organizationName   String?
   organizationNumber String?
-  user               User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  birthDate          DateTime? @db.Date
+  address            String?
+  postalCode         String?
+  postalPlace        String?
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model UserVerification {
@@ -146,17 +150,24 @@ model Farm {
 }
 
 model FarmParcel {
-  id                  Int      @id @default(autoincrement())
-  farmId              Int
-  name                String?
-  areaDekar           Float
-  polygonJson         Json
-  soilCompositionJson Json
-  waterAccess         String?
-  drainageNotes       String?
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-  farm                Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  id                      Int      @id @default(autoincrement())
+  farmId                  Int
+  name                    String?
+  areaDekar               Float
+  polygonJson             Json
+  soilCompositionJson     Json
+  waterAccess             String?
+  drainageNotes           String?
+  gnr                     Int?
+  bnr                     Int?
+  matrikkelNote           String?
+  areaFulldyrkaDekar      Float    @default(0)
+  areaOverflatedyrkaDekar Float    @default(0)
+  areaInnmarksbeiteDekar  Float    @default(0)
+  areaAnnaDekar           Float    @default(0)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  farm                    Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
 
   @@index([farmId])
 }
@@ -190,6 +201,23 @@ model Listing {
   auctionEndAt            DateTime
   winnerBidId             Int?           @unique
   publishedAt             DateTime?
+  // Kontraktsrelaterte felt (NLR-19 pkt. 4)
+  paymentDueDate          String?        // Dag/månad for årleg forfall, f.eks. "01.10"
+  firstDueDate            DateTime?      // Første forfall
+  vatApplies              Boolean        @default(false)
+  indexRegulation         Boolean        @default(false)
+  indexType               String?        // f.eks. "Konsumprisindeksen (KPI)"
+  indexStartYear          Int?           // Kva år er første regulering
+  indexBaseYear           Int?           // Utgangspunkt for indeksen
+  // Tilstand (NLR-19 pkt. 6)
+  hasConditionReport      Boolean        @default(false)
+  hasFloghavre            Boolean?       // null = ikkje spesifisert
+  hasSoilSamples          Boolean        @default(false)
+  hasFertilizerPlan       Boolean        @default(false)
+  conditionNotes          String?        // Jordekantar, pH, ugras, grøfter osv.
+  // Fritekst
+  additionalTerms         String?        // Tillegg eller atterhald om areala (pkt. 3)
+  specialTerms            String?        // Særleg avtale om bruk (pkt. 7)
   createdAt               DateTime       @default(now())
   updatedAt               DateTime       @updatedAt
   farm                    Farm           @relation(fields: [farmId], references: [id], onDelete: Cascade)
@@ -261,19 +289,22 @@ model Message {
 }
 
 model Lease {
-  id           Int         @id @default(autoincrement())
-  listingId    Int         @unique
-  ownerUserId  Int
-  tenantUserId Int
-  winningBidId Int?        @unique
-  status       LeaseStatus @default(DRAFT)
-  startDate    DateTime?
-  endDate      DateTime?
-  annualAmount Float?
-  contractUrl  String?
-  signedAt     DateTime?
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  id                Int         @id @default(autoincrement())
+  listingId         Int         @unique
+  ownerUserId       Int
+  tenantUserId      Int
+  winningBidId      Int?        @unique
+  status            LeaseStatus @default(DRAFT)
+  startDate         DateTime?
+  endDate           DateTime?
+  annualAmount      Float?
+  contractUrl       String?
+  contractDataJson  Json?       // Avtalefelt fylt inn av partane (andre forhold, signaturdata osv.)
+  ownerSignedAt     DateTime?
+  tenantSignedAt    DateTime?
+  signedAt          DateTime?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
   listing      Listing     @relation(fields: [listingId], references: [id], onDelete: Cascade)
   owner        User        @relation("LeaseOwner", fields: [ownerUserId], references: [id], onDelete: Restrict)
   tenant       User        @relation("LeaseTenant", fields: [tenantUserId], references: [id], onDelete: Restrict)

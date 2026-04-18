@@ -15,6 +15,12 @@
     </span>
   </div>
 
+  <% if (typeof error !== "undefined" && error) { %>
+    <div style="margin:0 0 18px; border:1px solid #f5c2b8; background:#fff1ef; color:#8a3328; padding:14px 16px; border-radius:14px;">
+      <%= error %>
+    </div>
+  <% } %>
+
   <!-- Two-column layout: left (details) + right (auction panel) -->
   <div class="ap-detail-layout">
 
@@ -80,6 +86,115 @@
         </h2>
         <p class="ap-farm-description"><%= farm.description %></p>
       </div>
+
+      <!-- Matrikkel + arealfordeling -->
+      <% if ((farm.matrikler && farm.matrikler.length) || farm.areaFulldyrka || farm.areaOverflatedyrka || farm.areaInnmarksbeite || farm.areaAnna) { %>
+        <div class="ap-detail-section">
+          <h2 class="ap-section-heading">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v18H3z"/><path d="M9 3v18"/><path d="M15 3v18"/><path d="M3 9h18"/><path d="M3 15h18"/></svg>
+            Matrikkel og arealfordeling
+          </h2>
+          <% if (farm.matrikler && farm.matrikler.length) { %>
+            <table style="width:100%; border-collapse:collapse; margin-bottom:16px;">
+              <thead>
+                <tr style="text-align:left; border-bottom:1px solid var(--border); font-size:0.82rem; color:var(--text-light); text-transform:uppercase; letter-spacing:0.04em;">
+                  <th style="padding:8px 12px 8px 0;">Gnr</th>
+                  <th style="padding:8px 12px;">Bnr</th>
+                  <th style="padding:8px 12px;">Kommune</th>
+                  <th style="padding:8px 12px;">Merknad</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% farm.matrikler.forEach(m => { %>
+                  <tr style="border-bottom:1px solid var(--border-subtle, #eee);">
+                    <td style="padding:10px 12px 10px 0; font-weight:700;"><%= m.gnr || "–" %></td>
+                    <td style="padding:10px 12px; font-weight:700;"><%= m.bnr || "–" %></td>
+                    <td style="padding:10px 12px;"><%= farm.municipality %></td>
+                    <td style="padding:10px 12px; color:var(--text-mid);"><%= m.matrikkelNote || "" %></td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          <% } %>
+          <% if (farm.areaFulldyrka || farm.areaOverflatedyrka || farm.areaInnmarksbeite || farm.areaAnna) { %>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:10px;">
+              <div class="ap-auction-detail-box">
+                <div class="ap-auction-detail-label">Fulldyrka</div>
+                <div class="ap-auction-detail-value"><%= (farm.areaFulldyrka || 0).toLocaleString("no-NO") %> daa</div>
+              </div>
+              <div class="ap-auction-detail-box">
+                <div class="ap-auction-detail-label">Overflatedyrka</div>
+                <div class="ap-auction-detail-value"><%= (farm.areaOverflatedyrka || 0).toLocaleString("no-NO") %> daa</div>
+              </div>
+              <div class="ap-auction-detail-box">
+                <div class="ap-auction-detail-label">Innmarksbeite</div>
+                <div class="ap-auction-detail-value"><%= (farm.areaInnmarksbeite || 0).toLocaleString("no-NO") %> daa</div>
+              </div>
+              <div class="ap-auction-detail-box">
+                <div class="ap-auction-detail-label">Anna areal</div>
+                <div class="ap-auction-detail-value"><%= (farm.areaAnna || 0).toLocaleString("no-NO") %> daa</div>
+              </div>
+            </div>
+          <% } %>
+        </div>
+      <% } %>
+
+      <!-- Tilstand -->
+      <% if (farm.conditionNotes || farm.hasFloghavre !== null || farm.hasConditionReport || farm.hasSoilSamples || farm.hasFertilizerPlan) { %>
+        <div class="ap-detail-section">
+          <h2 class="ap-section-heading">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg>
+            Tilstand
+          </h2>
+          <div style="display:grid; gap:10px; margin-bottom:12px;">
+            <% if (farm.hasFloghavre === true) { %>
+              <div style="padding:10px 14px; border-radius:10px; background:#fff3cd; border:1px solid #ffeeba; color:#856404;">⚠ Det finst floghavre på eigedomen</div>
+            <% } else if (farm.hasFloghavre === false) { %>
+              <div style="padding:10px 14px; border-radius:10px; background:#eef8eb; border:1px solid #c9dfc2; color:#29552d;">✓ Det finst ikkje floghavre på eigedomen</div>
+            <% } %>
+            <% if (farm.hasConditionReport) { %><div style="font-size:0.9rem; color:var(--text-mid);">✓ Tilstandsrapport er vedlagt avtalen</div><% } %>
+            <% if (farm.hasSoilSamples) { %><div style="font-size:0.9rem; color:var(--text-mid);">✓ Kopi av jordprøver vert utlevert</div><% } %>
+            <% if (farm.hasFertilizerPlan) { %><div style="font-size:0.9rem; color:var(--text-mid);">✓ Siste års gjødselplan vert utlevert</div><% } %>
+          </div>
+          <% if (farm.conditionNotes) { %>
+            <p class="ap-farm-description" style="white-space:pre-wrap;"><%= farm.conditionNotes %></p>
+          <% } %>
+        </div>
+      <% } %>
+
+      <!-- Betaling og indeksregulering -->
+      <% if (farm.paymentDueDate || farm.vatApplies || farm.indexRegulation) { %>
+        <div class="ap-detail-section">
+          <h2 class="ap-section-heading">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+            Betaling og indeksregulering
+          </h2>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:10px;">
+            <% if (farm.paymentDueDate) { %>
+              <div class="ap-auction-detail-box">
+                <div class="ap-auction-detail-label">Årleg forfall</div>
+                <div class="ap-auction-detail-value"><%= farm.paymentDueDate %></div>
+              </div>
+            <% } %>
+            <% if (farm.firstDueDate) { %>
+              <div class="ap-auction-detail-box">
+                <div class="ap-auction-detail-label">Første forfall</div>
+                <div class="ap-auction-detail-value"><%= new Date(farm.firstDueDate).toLocaleDateString("no-NO") %></div>
+              </div>
+            <% } %>
+            <div class="ap-auction-detail-box">
+              <div class="ap-auction-detail-label">MVA</div>
+              <div class="ap-auction-detail-value"><%= farm.vatApplies ? "Ja" : "Nei" %></div>
+            </div>
+            <% if (farm.indexRegulation && farm.indexType) { %>
+              <div class="ap-auction-detail-box">
+                <div class="ap-auction-detail-label">Indeks</div>
+                <div class="ap-auction-detail-value" style="font-size:0.9rem;"><%= farm.indexType %></div>
+              </div>
+            <% } %>
+          </div>
+        </div>
+      <% } %>
 
       <!-- Owner info -->
       <div class="ap-detail-section">
@@ -267,7 +382,30 @@
         <% } else { %>
           <div class="ap-auction-state ap-auction-state-closed">
             <div class="ap-auction-state-title">Auksjonen er avsluttet</div>
+            <% if (farm.hasLease) { %>
+              <div class="ap-auction-state-date" style="margin-top:6px;">
+                Avtale er oppretta frå vinnarbodet.
+              </div>
+            <% } %>
           </div>
+        <% } %>
+
+        <%
+          const isOwner = currentUser && farm.ownerUserId && currentUser.id === farm.ownerUserId;
+          const canEndAuction = isOwner
+            && farm.currentBid > 0
+            && !farm.hasLease
+            && (farm.rawStatus === "ACTIVE" || farm.rawStatus === "ENDED");
+        %>
+        <% if (canEndAuction) { %>
+          <form action="/auksjoner/<%= farm._id %>/avslutt" method="POST" style="margin-top:16px;">
+            <button type="submit" class="btn-primary" style="width:100%; justify-content:center;">
+              Avslutt auksjon og opprett avtale →
+            </button>
+            <p class="ap-bid-hint" style="margin-top:8px;">
+              Dette merker vinnarbodet, låser auksjonen, og oppretter eit utkast til jordleigeavtale.
+            </p>
+          </form>
         <% } %>
       </div>
 

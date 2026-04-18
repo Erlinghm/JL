@@ -63,7 +63,12 @@ function createFarmRouter({ Farm = defaultFarm, auth = defaultAuth } = {}) {
       if (!farm) {
         return res.status(404).render("404", { title: "Ikke funnet" });
       }
-      res.render("farm", { title: farm.title + " – Jordleie.no", farm });
+      res.render("farm", {
+        title: farm.title + " – Jordleie.no",
+        farm,
+        error: req.query.error || null,
+        success: req.query.success || null,
+      });
     } catch (err) {
       console.error("GET /auksjoner/:id error:", err);
       res.status(500).render("error", {
@@ -82,9 +87,32 @@ function createFarmRouter({ Farm = defaultFarm, auth = defaultAuth } = {}) {
         municipality, fylke, address,
         lat, lng, fieldPolygon,
         sizeDekar, soilType, soilQuality,
+        areaFulldyrka, areaOverflatedyrka, areaInnmarksbeite, areaAnna,
         auctionStart, auctionEnd, startingBid, rentalPeriodYears,
         cropTypes,
+        matrikkelGnr, matrikkelBnr, matrikkelNote,
+        paymentDueDate, firstDueDate, vatApplies,
+        indexType, indexStartYear, indexBaseYear,
+        hasFloghavre, hasConditionReport, hasSoilSamples, hasFertilizerPlan,
+        conditionNotes, additionalTerms, specialTerms,
       } = req.body;
+
+      // Normaliser matrikkel-rader til array av objekter
+      const gnrArr = Array.isArray(matrikkelGnr) ? matrikkelGnr : matrikkelGnr ? [matrikkelGnr] : [];
+      const bnrArr = Array.isArray(matrikkelBnr) ? matrikkelBnr : matrikkelBnr ? [matrikkelBnr] : [];
+      const noteArr = Array.isArray(matrikkelNote) ? matrikkelNote : matrikkelNote ? [matrikkelNote] : [];
+      const matrikler = [];
+      const maxLen = Math.max(gnrArr.length, bnrArr.length, noteArr.length);
+      for (let i = 0; i < maxLen; i++) {
+        const gnr = gnrArr[i] ? parseInt(gnrArr[i], 10) : null;
+        const bnr = bnrArr[i] ? parseInt(bnrArr[i], 10) : null;
+        const note = noteArr[i] ? String(noteArr[i]).trim() : null;
+        if (gnr || bnr || note) matrikler.push({ gnr, bnr, matrikkelNote: note });
+      }
+
+      // Parse tri-state checkbox for floghavre ("true"/"false"/"" = null)
+      const floghavre =
+        hasFloghavre === "true" ? true : hasFloghavre === "false" ? false : null;
 
       const farm = await Farm.create({
         title,
@@ -98,7 +126,11 @@ function createFarmRouter({ Farm = defaultFarm, auth = defaultAuth } = {}) {
         lat: parseFloat(lat) || 60.472,
         lng: parseFloat(lng) || 8.469,
         fieldPolygon: fieldPolygon || "[]",
-        sizeDekar: parseFloat(sizeDekar),
+        sizeDekar: parseFloat(sizeDekar) || 0,
+        areaFulldyrka: parseFloat(areaFulldyrka) || 0,
+        areaOverflatedyrka: parseFloat(areaOverflatedyrka) || 0,
+        areaInnmarksbeite: parseFloat(areaInnmarksbeite) || 0,
+        areaAnna: parseFloat(areaAnna) || 0,
         soilType: soilType || "Leirjord",
         soilQuality: soilQuality || "God",
         auctionStart: new Date(auctionStart),
@@ -110,6 +142,21 @@ function createFarmRouter({ Farm = defaultFarm, auth = defaultAuth } = {}) {
           : cropTypes
             ? [cropTypes]
             : [],
+        matrikler,
+        paymentDueDate: paymentDueDate ? String(paymentDueDate).trim() : null,
+        firstDueDate: firstDueDate ? new Date(firstDueDate) : null,
+        vatApplies: vatApplies === "true",
+        indexRegulation: Boolean(indexType && String(indexType).trim()),
+        indexType: indexType ? String(indexType).trim() || null : null,
+        indexStartYear: indexStartYear ? parseInt(indexStartYear, 10) : null,
+        indexBaseYear: indexBaseYear ? parseInt(indexBaseYear, 10) : null,
+        hasFloghavre: floghavre,
+        hasConditionReport: hasConditionReport === "true",
+        hasSoilSamples: hasSoilSamples === "true",
+        hasFertilizerPlan: hasFertilizerPlan === "true",
+        conditionNotes: conditionNotes ? String(conditionNotes).trim() : null,
+        additionalTerms: additionalTerms ? String(additionalTerms).trim() : null,
+        specialTerms: specialTerms ? String(specialTerms).trim() : null,
       });
 
       res.redirect("/auksjoner/" + farm.id);

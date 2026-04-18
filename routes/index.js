@@ -167,10 +167,20 @@ function createIndexRouter({ prisma = defaultPrisma, auth = defaultAuth } = {}) 
     const email = String(req.body.email || "").trim();
     const password = String(req.body.password || "");
     const confirmPassword = String(req.body.confirmPassword || "");
+    const birthDateRaw = String(req.body.birthDate || "").trim();
+    const birthDate = birthDateRaw ? new Date(birthDateRaw) : null;
 
     if (!fullName || !email || !password) {
       const params = new URLSearchParams({
         error: "Navn, e-post og passord er påkrevd.",
+        next: nextPath,
+      });
+      return res.redirect(`/registrer-deg?${params.toString()}`);
+    }
+
+    if (birthDate && Number.isNaN(birthDate.getTime())) {
+      const params = new URLSearchParams({
+        error: "Fødselsdatoen er ugyldig.",
         next: nextPath,
       });
       return res.redirect(`/registrer-deg?${params.toString()}`);
@@ -197,6 +207,7 @@ function createIndexRouter({ prisma = defaultPrisma, auth = defaultAuth } = {}) 
         email,
         password,
         fullName,
+        birthDate,
         emailRedirectTo: buildEmailConfirmationUrl(req, nextPath),
         res,
       });

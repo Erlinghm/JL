@@ -109,15 +109,53 @@
         </p>
       </div>
 
-      <!-- === SECTION 4: Farm details === -->
+      <!-- === SECTION 4: Matrikkel (gnr/bnr) === -->
+      <div class="form-section">
+        <div class="form-section-title" style="display:flex;align-items:center;gap:8px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v18H3z"/><path d="M9 3v18"/><path d="M15 3v18"/><path d="M3 9h18"/><path d="M3 15h18"/></svg> Matrikkel (gnr/bnr)</div>
+        <p style="font-size:0.85rem; color:var(--text-mid); margin-bottom:12px;">
+          Legg inn ein eller fleire eigedomar som skal leigast ut. Dette blir automatisk fylt inn i jordleigeavtalen.
+        </p>
+        <div id="matrikkel-rows"></div>
+        <button type="button" id="add-matrikkel" class="btn btn-outline" style="margin-top:8px;">
+          + Legg til eigedom
+        </button>
+      </div>
+
+      <!-- === SECTION 5: Arealfordeling === -->
+      <div class="form-section">
+        <div class="form-section-title" style="display:flex;align-items:center;gap:8px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg> Arealfordeling (dekar)</div>
+        <p style="font-size:0.85rem; color:var(--text-mid); margin-bottom:12px;">
+          Fyll inn dekar per arealtype, slik det står i landbruksregisteret. Totalen reknast automatisk.
+        </p>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="areaFulldyrka">Fulldyrka jord</label>
+            <input type="number" id="areaFulldyrka" name="areaFulldyrka" class="form-input area-input" placeholder="0" min="0" step="0.1" value="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="areaOverflatedyrka">Overflatedyrka jord</label>
+            <input type="number" id="areaOverflatedyrka" name="areaOverflatedyrka" class="form-input area-input" placeholder="0" min="0" step="0.1" value="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="areaInnmarksbeite">Innmarksbeite</label>
+            <input type="number" id="areaInnmarksbeite" name="areaInnmarksbeite" class="form-input area-input" placeholder="0" min="0" step="0.1" value="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="areaAnna">Anna areal</label>
+            <input type="number" id="areaAnna" name="areaAnna" class="form-input area-input" placeholder="0" min="0" step="0.1" value="0">
+          </div>
+        </div>
+        <div style="background:var(--green-pale); border:1px solid #c1ddb8; border-radius:var(--radius); padding:12px; margin-top:8px;">
+          <div style="font-size:0.8rem; color:var(--green-dark); font-weight:700;">Sum areal</div>
+          <div id="sizeDekarDisplay" style="font-size:1.2rem; font-weight:800; color:var(--green-dark);">0 dekar</div>
+        </div>
+        <input type="hidden" id="sizeDekar" name="sizeDekar" value="0">
+      </div>
+
+      <!-- === SECTION 6: Farm details === -->
       <div class="form-section">
         <div class="form-section-title" style="display:flex;align-items:center;gap:8px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18"/></svg> Gårdsdetaljer</div>
         <div class="form-grid-3">
-          <div class="form-group">
-            <label class="form-label" for="sizeDekar">Størrelse (dekar) *</label>
-            <input type="number" id="sizeDekar" name="sizeDekar" class="form-input"
-                   placeholder="F.eks. 120" min="1" required>
-          </div>
           <div class="form-group">
             <label class="form-label" for="soilType">Jordtype</label>
             <select id="soilType" name="soilType" class="form-select">
@@ -142,6 +180,10 @@
               <option value="10">10 år</option>
             </select>
           </div>
+          <div class="form-group">
+            <label class="form-label" for="additionalTerms">Tillegg / atterhald om areala</label>
+            <input type="text" id="additionalTerms" name="additionalTerms" class="form-input" placeholder="Valfritt">
+          </div>
         </div>
 
         <!-- Crop types checkboxes -->
@@ -158,7 +200,39 @@
         </div>
       </div>
 
-      <!-- === SECTION 5: Auction info === -->
+      <!-- === SECTION 7: Tilstand === -->
+      <div class="form-section">
+        <div class="form-section-title" style="display:flex;align-items:center;gap:8px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg> Tilstand</div>
+        <p style="font-size:0.85rem; color:var(--text-mid); margin-bottom:12px;">
+          Synleg for bydarar, og fyllast automatisk inn i avtalen (NLR-19 pkt. 6).
+        </p>
+
+        <div class="form-group">
+          <label class="form-label">Floghavre</label>
+          <div style="display:flex; gap:18px; flex-wrap:wrap;">
+            <label class="checkbox-label"><input type="radio" name="hasFloghavre" value="" checked> Ikkje oppgitt</label>
+            <label class="checkbox-label"><input type="radio" name="hasFloghavre" value="false"> Det finst ikkje floghavre</label>
+            <label class="checkbox-label"><input type="radio" name="hasFloghavre" value="true"> Det finst floghavre</label>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top:14px;">
+          <label class="form-label">Vedlegg / dokumentasjon</label>
+          <div class="checkbox-group">
+            <label class="checkbox-label"><input type="checkbox" name="hasConditionReport" value="true"> Tilstandsrapport vert lagt ved</label>
+            <label class="checkbox-label"><input type="checkbox" name="hasSoilSamples" value="true"> Kopi av jordprøver vert utlevert</label>
+            <label class="checkbox-label"><input type="checkbox" name="hasFertilizerPlan" value="true"> Siste års gjødselplan vert utlevert</label>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top:14px;">
+          <label class="form-label" for="conditionNotes">Tilstandsopplysningar</label>
+          <textarea id="conditionNotes" name="conditionNotes" class="form-textarea" rows="3"
+                    placeholder="Jordekantar, pH-tilstand, næringsinnhald, hydrotekniske anlegg, ugrastilstand (kveke, tunrapp, rotugras) osv."></textarea>
+        </div>
+      </div>
+
+      <!-- === SECTION 8: Auction info === -->
       <div class="form-section">
         <div class="form-section-title" style="display:flex;align-items:center;gap:8px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg> Auksjonsinformasjon</div>
         <div class="form-grid-3">
@@ -185,6 +259,49 @@
         </div>
       </div>
 
+      <!-- === SECTION 9: Betaling og indeksregulering === -->
+      <div class="form-section">
+        <div class="form-section-title" style="display:flex;align-items:center;gap:8px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> Betaling og indeksregulering</div>
+        <p style="font-size:0.85rem; color:var(--text-mid); margin-bottom:12px;">
+          Desse vilkåra blir med i jordleigeavtalen (NLR-19 pkt. 4).
+        </p>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="paymentDueDate">Årleg forfallsdato</label>
+            <input type="text" id="paymentDueDate" name="paymentDueDate" class="form-input" placeholder="F.eks. 01.10">
+            <p style="font-size:0.75rem; color:var(--text-light); margin-top:4px;">Format: dd.mm (same dato kvart år).</p>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="firstDueDate">Første forfall</label>
+            <input type="date" id="firstDueDate" name="firstDueDate" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">MVA</label>
+            <div style="display:flex; gap:18px; flex-wrap:wrap; padding-top:6px;">
+              <label class="checkbox-label"><input type="radio" name="vatApplies" value="false" checked> Ingen MVA</label>
+              <label class="checkbox-label"><input type="radio" name="vatApplies" value="true"> MVA i tillegg</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="indexType">Indeksregulering</label>
+            <select id="indexType" name="indexType" class="form-select">
+              <option value="">Ingen indeksregulering</option>
+              <option value="Konsumprisindeksen (KPI)">Konsumprisindeksen (KPI)</option>
+              <option value="Produsentprisindeksen (PPI)">Produsentprisindeksen (PPI)</option>
+              <option value="Byggekostnadsindeksen">Byggekostnadsindeksen</option>
+            </select>
+          </div>
+          <div class="form-group index-only" style="display:none;">
+            <label class="form-label" for="indexStartYear">Første reguleringsår</label>
+            <input type="number" id="indexStartYear" name="indexStartYear" class="form-input" placeholder="F.eks. 2027" min="2025" max="2050">
+          </div>
+          <div class="form-group index-only" style="display:none;">
+            <label class="form-label" for="indexBaseYear">Utgangspunkt (basisår)</label>
+            <input type="number" id="indexBaseYear" name="indexBaseYear" class="form-input" placeholder="F.eks. 2026" min="2000" max="2050">
+          </div>
+        </div>
+      </div>
+
       <!-- Submit -->
       <div style="display:flex; justify-content:flex-end; gap:12px; padding: 0 0 40px;">
         <a href="/auksjoner" class="btn btn-outline">Avbryt</a>
@@ -197,16 +314,29 @@
   <%- include('partials/footer') %>
 </main>
 
-<!-- Live estimate calculator -->
+<!-- Live estimate calculator + matrikkel rows + index visibility -->
 <script>
   document.addEventListener("DOMContentLoaded", () => {
-    const sizeInput = document.getElementById("sizeDekar");
-    const bidInput  = document.getElementById("startingBid");
-    const estimate  = document.getElementById("estimate");
+    const sizeHidden = document.getElementById("sizeDekar");
+    const sizeDisplay = document.getElementById("sizeDekarDisplay");
+    const bidInput = document.getElementById("startingBid");
+    const estimate = document.getElementById("estimate");
+    const areaInputs = document.querySelectorAll(".area-input");
+
+    function updateSum() {
+      let sum = 0;
+      areaInputs.forEach((el) => {
+        sum += parseFloat(el.value) || 0;
+      });
+      sum = Math.round(sum * 10) / 10;
+      sizeHidden.value = sum;
+      sizeDisplay.textContent = sum.toLocaleString("no-NO") + " dekar";
+      updateEstimate();
+    }
 
     function updateEstimate() {
-      const size = parseFloat(sizeInput.value) || 0;
-      const bid  = parseFloat(bidInput.value)  || 0;
+      const size = parseFloat(sizeHidden.value) || 0;
+      const bid = parseFloat(bidInput.value) || 0;
       if (size > 0 && bid > 0) {
         estimate.textContent = (size * bid).toLocaleString("no-NO") + " kr/år";
       } else {
@@ -214,14 +344,56 @@
       }
     }
 
-    sizeInput.addEventListener("input", updateEstimate);
+    areaInputs.forEach((el) => el.addEventListener("input", updateSum));
     bidInput.addEventListener("input", updateEstimate);
 
-    // Set default auction dates: start today, end in 3 weeks
+    // Default auction dates: start today, end in 3 weeks
     const today = new Date();
-    const end   = new Date(today);
+    const end = new Date(today);
     end.setDate(end.getDate() + 21);
-    document.getElementById("auctionStart").value = today.toISOString().slice(0,10);
-    document.getElementById("auctionEnd").value   = end.toISOString().slice(0,10);
+    document.getElementById("auctionStart").value = today.toISOString().slice(0, 10);
+    document.getElementById("auctionEnd").value = end.toISOString().slice(0, 10);
+
+    // ---- Matrikkel rows (repeatable) ----
+    const matrikkelContainer = document.getElementById("matrikkel-rows");
+    const addMatrikkelBtn = document.getElementById("add-matrikkel");
+
+    function addMatrikkelRow() {
+      const row = document.createElement("div");
+      row.className = "matrikkel-row";
+      row.style.cssText = "display:grid; grid-template-columns:1fr 1fr 2fr auto; gap:12px; margin-bottom:10px; align-items:end;";
+      row.innerHTML = `
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">Gnr</label>
+          <input type="number" name="matrikkelGnr[]" class="form-input" placeholder="F.eks. 12" min="0">
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">Bnr</label>
+          <input type="number" name="matrikkelBnr[]" class="form-input" placeholder="F.eks. 3" min="0">
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">Merknad</label>
+          <input type="text" name="matrikkelNote[]" class="form-input" placeholder="Valfritt">
+        </div>
+        <button type="button" class="btn btn-outline remove-matrikkel" style="height:42px;">Fjern</button>
+      `;
+      matrikkelContainer.appendChild(row);
+      row.querySelector(".remove-matrikkel").addEventListener("click", () => row.remove());
+    }
+
+    addMatrikkelBtn.addEventListener("click", addMatrikkelRow);
+    addMatrikkelRow(); // Start med éi rad
+
+    // ---- Vis/gøym indeksfelt basert på val ----
+    const indexType = document.getElementById("indexType");
+    const indexOnly = document.querySelectorAll(".index-only");
+    function toggleIndexFields() {
+      const show = indexType.value && indexType.value.trim() !== "";
+      indexOnly.forEach((el) => (el.style.display = show ? "" : "none"));
+    }
+    indexType.addEventListener("change", toggleIndexFields);
+    toggleIndexFields();
+
+    updateSum();
   });
 </script>
