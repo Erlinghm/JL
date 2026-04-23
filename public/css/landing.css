@@ -673,22 +673,28 @@ button:focus-visible,
 .lp-benefits-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 36px;
+  row-gap: 14px;
+  column-gap: 36px;
+  align-items: stretch;
+}
+
+.lp-benefits-col,
+.lp-benefit-cards {
+  display: contents;
 }
 
 .lp-benefits-col h3 {
+  grid-row: 1;
   font-size: 0.95rem;
   font-weight: 700;
   color: var(--green);
-  margin-bottom: 20px;
+  margin: 0;
   letter-spacing: -0.01em;
 }
 
-.lp-benefit-cards {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
+.lp-benefit-cards .lp-benefit-card:nth-child(1) { grid-row: 2; }
+.lp-benefit-cards .lp-benefit-card:nth-child(2) { grid-row: 3; }
+.lp-benefit-cards .lp-benefit-card:nth-child(3) { grid-row: 4; }
 
 .lp-benefit-card {
   display: flex;
@@ -700,6 +706,7 @@ button:focus-visible,
   padding: 24px;
   box-shadow: var(--shadow);
   transition: box-shadow 0.2s, transform 0.2s;
+  height: 100%;
 }
 
 .lp-benefit-card:hover {
@@ -1587,6 +1594,7 @@ body.has-sidebar {
   display: flex;
   flex-direction: column;
   gap: 9px;
+  min-width: 0;
 }
 
 .ap-farm-card-top {
@@ -1602,6 +1610,7 @@ body.has-sidebar {
   color: var(--text);
   line-height: 1.3;
   letter-spacing: -0.015em;
+  overflow-wrap: anywhere;
 }
 
 .ap-farm-badge {
@@ -1645,6 +1654,7 @@ body.has-sidebar {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  overflow-wrap: anywhere;
 }
 
 .ap-crop-tags {
@@ -2486,6 +2496,11 @@ body.has-sidebar {
     grid-template-columns: 1fr;
   }
 
+  .lp-benefits-col h3,
+  .lp-benefit-cards .lp-benefit-card {
+    grid-row: auto;
+  }
+
   /* Auctions preview: 2 columns on tablet */
   .lp-auctions-grid {
     grid-template-columns: 1fr 1fr;
@@ -2508,20 +2523,36 @@ body.has-sidebar {
   .app-page { margin-left: 0; }
 
   /* Auction pages */
-  .page-intro { padding: 28px 24px; }
-  .page-intro-inner { flex-direction: column; align-items: flex-start; gap: 16px; }
-  .ap-stats { padding: 20px 24px; }
-  .ap-stats-inner { flex-wrap: wrap; gap: 12px; }
+  .page-intro { padding: 40px 40px; }
+  .page-intro-inner { flex-direction: row; align-items: flex-end; gap: 24px; }
+  .ap-stats { padding: 24px 40px; }
+  .ap-stats-inner { flex-wrap: nowrap; gap: 0; }
+  .ap-stats-inner > .ap-stat { flex: 1 1 0; text-align: center; padding: 0 20px; }
+  .ap-stats-inner > .ap-stat + .ap-stat { border-left: 1px solid var(--border) !important; }
   .ap-stat { flex: 1 1 45%; text-align: left; padding: 0; border: none !important; }
   .ap-filter { padding: 12px 24px; }
   .ap-farms { padding: 20px 24px; }
-  .ap-farm-card { grid-template-columns: 1fr; }
-  .ap-farm-card-map { min-height: 160px; }
+  .ap-farm-card { grid-template-columns: 1fr 210px; }
+  .ap-farm-card-map { min-height: 180px; }
   .ap-breadcrumb { padding: 12px 24px; }
   .ap-detail-layout { grid-template-columns: 1fr; }
   .ap-detail-left { padding: 24px; border-right: none; border-bottom: 1px solid var(--border); }
   .ap-detail-right { padding: 24px; }
   .ap-soil-stats { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 720px) {
+  .page-intro { padding: 28px 16px; }
+  .page-intro-inner { flex-direction: column; align-items: flex-start; gap: 16px; }
+  .ap-stats { padding: 20px 16px; }
+  .ap-stats-inner { flex-wrap: wrap; gap: 12px; }
+  .ap-stats-inner > .ap-stat { flex: 1 1 45%; text-align: left; padding: 0; }
+  .ap-stats-inner > .ap-stat + .ap-stat { border-left: none !important; }
+  .ap-farm-card { grid-template-columns: 1fr; }
+  .ap-farm-card-map {
+    width: 100%;
+    min-height: 160px;
+  }
 }
 
 @media (max-width: 620px) {

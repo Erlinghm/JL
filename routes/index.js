@@ -261,12 +261,46 @@ function createIndexRouter({ prisma = defaultPrisma, auth = defaultAuth } = {}) 
   });
 
   // Min bruker (My profile / create listing)
-  router.get("/min-bruker", auth.requireAuth, (req, res) => {
+  router.get("/min-bruker", auth.requireAuth, async (req, res) => {
+    let stats = {
+      activeListings: 0,
+      activeBids: 0,
+    };
+
+    try {
+      const [activeListings, activeBids] = await Promise.all([
+        prisma.listing.count({
+          where: {
+            ownerUserId: req.currentUser.id,
+            status: "ACTIVE",
+          },
+        }),
+        prisma.bid.count({
+          where: {
+            bidderUserId: req.currentUser.id,
+            listing: {
+              is: {
+                status: "ACTIVE",
+              },
+            },
+          },
+        }),
+      ]);
+
+      stats = {
+        activeListings,
+        activeBids,
+      };
+    } catch (error) {
+      console.error("GET /min-bruker stats error:", error);
+    }
+
     res.render("my-profile", {
       title: "Min bruker",
       user: req.currentUser,
       success: readMessage(req.query.success),
       error: readMessage(req.query.error),
+      stats,
     });
   });
 
