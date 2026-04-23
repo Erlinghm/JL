@@ -16,11 +16,11 @@
 
   <div class="form-page" style="max-width:960px;">
     <% if (success) { %>
-      <div style="margin-bottom:18px; border:1px solid #c9dfc2; background:#eef8eb; color:#29552d; padding:14px 16px; border-radius:14px;"><%= success %></div>
+      <div style="margin-bottom:18px; border:1px solid var(--green-pale); background:var(--green-pale); color:var(--green); padding:14px 16px; border-radius:var(--radius-md);"><%= success %></div>
     <% } %>
 
     <% if (error) { %>
-      <div style="margin-bottom:18px; border:1px solid #f5c2b8; background:#fff1ef; color:#8a3328; padding:14px 16px; border-radius:14px;"><%= error %></div>
+      <div style="margin-bottom:18px; border:1px solid var(--jl-error-container); background:var(--jl-error-container); color:var(--jl-on-error-container); padding:14px 16px; border-radius:var(--radius-md);"><%= error %></div>
     <% } %>
 
     <div class="form-section" style="display:grid; grid-template-columns:auto 1fr auto; gap:24px; align-items:center;">

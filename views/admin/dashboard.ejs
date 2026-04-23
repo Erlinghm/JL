@@ -28,7 +28,7 @@
     <% } else { %>
       <table style="width:100%; border-collapse:collapse; font-size:0.95rem;">
         <thead>
-          <tr style="border-bottom: 2px solid var(--border-color, #e5e7eb); text-align:left;">
+          <tr style="border-bottom: 2px solid var(--border); text-align:left;">
             <th style="padding: 0.75rem 1rem;">Tittel</th>
             <th style="padding: 0.75rem 1rem;">Fylke</th>
             <th style="padding: 0.75rem 1rem;">Status</th>
@@ -38,18 +38,18 @@
         </thead>
         <tbody>
           <% farms.forEach(function(f) { %>
-            <tr style="border-bottom: 1px solid var(--border-color, #e5e7eb);">
+            <tr style="border-bottom: 1px solid var(--border);">
               <td style="padding: 0.75rem 1rem;"><%= f.title %></td>
               <td style="padding: 0.75rem 1rem;"><%= f.fylke %></td>
               <td style="padding: 0.75rem 1rem;">
                 <span style="
                   display:inline-block;
                   padding: 0.2rem 0.6rem;
-                  border-radius: 9999px;
+                  border-radius: var(--radius-full);
                   font-size: 0.8rem;
                   font-weight: 600;
-                  background: <%= f.status === 'aktiv' ? '#d1fae5' : f.status === 'kommende' ? '#dbeafe' : '#f3f4f6' %>;
-                  color: <%= f.status === 'aktiv' ? '#065f46' : f.status === 'kommende' ? '#1e40af' : '#374151' %>;
+                  background: <%= f.status === 'aktiv' ? 'var(--green-pale)' : f.status === 'kommende' ? '#dbeafe' : 'var(--bg-alt)' %>;
+                  color: <%= f.status === 'aktiv' ? 'var(--green)' : f.status === 'kommende' ? '#1e40af' : 'var(--text-mid)' %>;
                 ">
                   <%= f.status %>
                 </span>
@@ -65,10 +65,10 @@
                   <button type="submit" style="
                     font-size:0.85rem;
                     padding:0.3rem 0.75rem;
-                    border: 1px solid #fca5a5;
-                    background: #fff;
-                    color: #dc2626;
-                    border-radius: 6px;
+                    border: 1px solid var(--jl-error);
+                    background: var(--bg-card);
+                    color: var(--jl-error);
+                    border-radius: var(--radius);
                     cursor: pointer;
                   ">
                     Slett
