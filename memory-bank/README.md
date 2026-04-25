@@ -32,6 +32,8 @@ Each entry follows this shape:
   levels, and production-readiness notes.
 - `sprint-1-agricultural-design-system`: Visual design rules for the
   agricultural marketplace UI.
+- `sprint-1-auction-status-sync`: Keeping ended auctions from appearing active
+  and blocking bids after the auction end time.
 
 ## Source coverage
 

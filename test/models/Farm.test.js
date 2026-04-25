@@ -4,11 +4,13 @@ const assert = require("node:assert/strict");
 const { createFarmModel, toView } = require("../../models/Farm");
 
 function buildListing(overrides = {}) {
+  const now = Date.now();
+
   return {
     id: 10,
     status: "ACTIVE",
-    auctionStartAt: new Date("2026-04-01T00:00:00.000Z"),
-    auctionEndAt: new Date("2026-04-10T00:00:00.000Z"),
+    auctionStartAt: new Date(now - 24 * 60 * 60 * 1000),
+    auctionEndAt: new Date(now + 24 * 60 * 60 * 1000),
     startingBidPerDekarYear: 650,
     currentBidPerDekarYear: 710,
     rentalPeriodYears: 5,
@@ -107,6 +109,15 @@ test("toView maps Prisma listings into the legacy auction view model", () => {
   assert.deepEqual(view.bids.map((bid) => bid.bidderName), ["Sivert Dahl", "Anonym"]);
 });
 
+test("toView derives ended status when an active listing is past its end time", () => {
+  const view = toView(buildListing({
+    status: "ACTIVE",
+    auctionEndAt: new Date("2020-04-10T00:00:00.000Z"),
+  }));
+
+  assert.equal(view.status, "avsluttet");
+});
+
 test("toView falls back to defaults when nested listing data is sparse", () => {
   const view = toView(buildListing({
     status: "ENDED",
@@ -188,7 +199,11 @@ test("toView tolerates invalid JSON and already-parsed parcel metadata", () => {
 });
 
 test("find translates filters into a Prisma query and maps the results", async () => {
-  const listing = buildListing({ status: "UPCOMING" });
+  const listing = buildListing({
+    status: "UPCOMING",
+    auctionStartAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    auctionEndAt: new Date(Date.now() + 48 * 60 * 60 * 1000),
+  });
   const prisma = {
     listing: {
       findMany: async (args) => {
@@ -690,6 +705,29 @@ test("updateBid rejects offers below the required minimum", async () => {
 
   const model = createFarmModel(prisma);
   await assert.rejects(() => model.updateBid(1, 700), /gjeldende minstepris/);
+});
+
+test("updateBid rejects ended listings even when persisted status is stale", async () => {
+  const prisma = {
+    $transaction: async (callback) => callback({
+      listing: {
+        updateMany: async () => {},
+        findUnique: async () => buildListing({
+          status: "ACTIVE",
+          auctionEndAt: new Date("2020-04-10T00:00:00.000Z"),
+          currentBidPerDekarYear: 700,
+          startingBidPerDekarYear: 650,
+          farm: {
+            county: "Østfold",
+            parcels: [{ areaDekar: 100 }],
+          },
+        }),
+      },
+    }),
+  };
+
+  const model = createFarmModel(prisma);
+  await assert.rejects(() => model.updateBid(1, 800), /avsluttet/);
 });
 
 test("updateBid marks prior bids as outbid, creates a winning bid, and updates the listing", async () => {

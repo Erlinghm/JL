@@ -128,6 +128,15 @@ function createFarmRouter({ Farm = defaultFarm, auth = defaultAuth } = {}) {
     try {
       const farm = await Farm.findById(req.params.id);
       if (!farm) return res.status(404).send("Ikke funnet");
+      if (farm.status !== "aktiv") {
+        return res.status(400).render("error", {
+          title: "Bud stengt – Jordleie.no",
+          message: "Auksjonen er ikke åpen for bud.",
+          hint: farm.status === "avsluttet"
+            ? "Auksjonen er avsluttet og kan ikke motta flere bud."
+            : "Auksjonen er ikke aktiv ennå.",
+        });
+      }
 
       const bidAmount = parseFloat(req.body.bidAmount);
 

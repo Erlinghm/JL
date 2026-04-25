@@ -1069,7 +1069,7 @@ test("POST /auksjoner/:id/bid places a bid when there is no current bid yet", as
     createdAt: new Date("2026-04-09T10:00:00Z"),
     profile: {},
   };
-  Farm.findById = async () => ({ id: 5, currentBid: 0 });
+  Farm.findById = async () => ({ id: 5, currentBid: 0, status: "aktiv" });
   Farm.updateBid = async (...args) => {
     calls.push(args);
   };
@@ -1106,7 +1106,7 @@ test("POST /auksjoner/:id/bid ignores bids that are not above the current bid", 
     createdAt: new Date("2026-04-09T10:00:00Z"),
     profile: {},
   };
-  Farm.findById = async () => ({ id: 6, currentBid: 900 });
+  Farm.findById = async () => ({ id: 6, currentBid: 900, status: "aktiv" });
   Farm.updateBid = async () => {
     updateCalls += 1;
   };
@@ -1132,6 +1132,45 @@ test("POST /auksjoner/:id/bid ignores bids that are not above the current bid", 
   }
 });
 
+test("POST /auksjoner/:id/bid rejects ended auctions before updating bids", async () => {
+  const Farm = createFarmMock();
+  let updateCalls = 0;
+  const currentUser = {
+    id: 12,
+    email: "kari@example.com",
+    fullName: "Kari",
+    role: "BOTH",
+    status: "ACTIVE",
+    createdAt: new Date("2026-04-09T10:00:00Z"),
+    profile: {},
+  };
+  Farm.findById = async () => ({ id: 7, currentBid: 0, status: "avsluttet" });
+  Farm.updateBid = async () => {
+    updateCalls += 1;
+  };
+
+  const client = await startApp(buildApp({
+    prisma: createPrismaMock(),
+    Farm,
+    auth: createAuthMock({ currentUser }),
+  }));
+
+  try {
+    const { path, init } = postForm("/auksjoner/7/bid", {
+      bidAmount: "1000",
+    });
+
+    const { response, body } = await client.request(path, init);
+    assert.equal(response.status, 400);
+    assert.equal(body.view, "error");
+    assert.equal(body.locals.message, "Auksjonen er ikke åpen for bud.");
+    assert.match(body.locals.hint, /avsluttet/);
+    assert.equal(updateCalls, 0);
+  } finally {
+    await client.close();
+  }
+});
+
 test("POST /auksjoner/:id/bid renders the shared error view on bid failures", async () => {
   const Farm = createFarmMock();
   const currentUser = {
@@ -1143,7 +1182,7 @@ test("POST /auksjoner/:id/bid renders the shared error view on bid failures", as
     createdAt: new Date("2026-04-09T10:00:00Z"),
     profile: {},
   };
-  Farm.findById = async () => ({ id: 8, currentBid: 100 });
+  Farm.findById = async () => ({ id: 8, currentBid: 100, status: "aktiv" });
   Farm.updateBid = async () => {
     throw new Error("bid failed");
   };

@@ -1,75 +1,165 @@
-<%- include('partials/head') %>
-<%- include('partials/sidebar') %>
+<%- include('partials/head', { title: typeof title !== "undefined" ? title : "Om Jordleie.no" }) %>
+<%- include('partials/sidebar', { currentUser: typeof currentUser !== "undefined" ? currentUser : null }) %>
 
 <main class="main-content">
-
-  <div class="page-header">
-    <h1 style="display:flex;align-items:center;gap:8px;">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-      Om Jordleie.no
-    </h1>
-  </div>
-
-  <div class="static-page">
-
-    <h1>Fremtidens jordleie – bygget av bønder, for bønder</h1>
-    <p class="lead">
-      Jordleie.no er en digital markedsplass for utleie og leie av jordbruksareal i Norge.
-      Vi tror at åpenhet, teknologi og rettferdige priser gir bedre vilkår for alle i landbruket.
-    </p>
-
-    <!-- Mission -->
-    <div style="background:var(--green-pale); border-left:4px solid var(--green-mid); border-radius:0 var(--radius) var(--radius) 0; padding:18px 22px; margin-bottom:28px;">
-      <strong style="color:var(--green-dark);">Vår misjon:</strong>
-      <span style="color:var(--text-mid); font-size:0.95rem; margin-left:6px;">
-        Å gjøre det enkelt, trygt og rettferdig å leie ut og leie inn jordbruksareal over hele Norge.
-      </span>
-    </div>
-
-    <h2>Bakgrunn</h2>
-    <p>
-      I dag foregår mye jordleie i Norge gjennom uformelle nettverk, naboavtaler og tilfeldige henvendelser.
-      Det gir sjelden rettferdig markedspris – verken for grunneier eller leietaker.
-    </p>
-    <p>
-      Jordleie.no ble startet med ett mål: å lage en åpen, nasjonal markedsplass der alle arealer
-      prises etter reell etterspørsel gjennom en transparent auksjonsprosess.
-    </p>
-
-    <h2>Hva vi tilbyr</h2>
-    <p>
-      Plattformen lar grunneiere legge ut sine arealer med kartinformasjon, jordbeskrivelse og
-      auksjonsvilkår. Potensielle leietakere kan bla gjennom alle tilgjengelige arealer, filtrere
-      på fylke og jordtype, og legge inn bud direkte.
-    </p>
-    <p>
-      Vi henter inn jordkartdata og satellittbilder for å gi leietakere best mulig grunnlag
-      for å vurdere et areal – uten å måtte besøke det fysisk først.
-    </p>
-
-    <h2>Hvem er vi?</h2>
-    <p>
-      Vi er et lite team med bakgrunn fra norsk landbruk, teknologi og jus. Vi jobber tett med
-      bondeorganisasjoner, Norsk Landbruksrådgiving og Kartverket for å bygge en plattform
-      som faktisk fungerer i norsk virkelighet.
-    </p>
-
-    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:32px;">
-      <% [
-        { name: "Erik Nygård", role: "Gründer & CEO", initial: "EN" },
-        { name: "Silje Berg",  role: "Produktsjef",    initial: "SB" },
-        { name: "Magnus Vik",  role: "Teknologisjef",  initial: "MV" }
-      ].forEach(person => { %>
-        <div style="background:var(--white); border:1.5px solid var(--border); border-radius:var(--radius-lg); padding:20px; text-align:center;">
-          <div style="width:52px; height:52px; border-radius:50%; background:var(--green-dark); display:flex; align-items:center; justify-content:center; color:white; font-size:1.1rem; font-weight:700; margin:0 auto 10px;">
-            <%= person.initial %>
-          </div>
-          <div style="font-weight:700; font-size:0.9rem;"><%= person.name %></div>
-          <div style="color:var(--text-light); font-size:0.78rem; margin-top:3px;"><%= person.role %></div>
+  <div class="about-page">
+    <section class="about-hero">
+      <div class="about-hero-copy">
+        <p class="about-eyebrow">Norsk jordleie, mer åpent organisert</p>
+        <h2>Vi bygger en ryddigere markedsplass for jordbruksareal.</h2>
+        <p>
+          Jordleie.no kobler grunneiere og bønder gjennom åpne annonser,
+          tydelige vilkår og budgivning som gjør pris og etterspørsel enklere
+          å forstå.
+        </p>
+        <div class="about-hero-actions">
+          <a href="/auksjoner" class="btn-primary">Se ledige arealer</a>
+          <a href="/lag-annonse" class="btn-outline">Legg ut jord</a>
         </div>
-      <% }) %>
-    </div>
+      </div>
 
+      <aside class="about-hero-card" aria-label="Kort om Jordleie.no">
+        <div class="about-card-kicker">Formål</div>
+        <p>
+          Gjøre jordleie mer tilgjengelig, dokumentert og forutsigbart for
+          begge parter.
+        </p>
+        <div class="about-hero-metrics">
+          <div>
+            <strong>Nasjonalt</strong>
+            <span>Samler annonser på tvers av fylker.</span>
+          </div>
+          <div>
+            <strong>Transparent</strong>
+            <span>Bud og vilkår ligger i samme prosess.</span>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="about-section about-split">
+      <div>
+        <p class="about-section-label">Hvorfor</p>
+        <h2>Jordleie er viktig, men prosessen er ofte uoversiktlig.</h2>
+      </div>
+      <div class="about-prose">
+        <p>
+          Mye jordleie skjer fortsatt gjennom lokale nettverk, korte
+          telefonsamtaler og avtaler som er vanskelige å sammenligne. Det kan
+          fungere godt mellom naboer, men det gir ikke alltid et godt bilde av
+          reell etterspørsel eller markedspris.
+        </p>
+        <p>
+          Vi lager en plattform der arealer presenteres strukturert, der
+          leietakere får bedre beslutningsgrunnlag, og der grunneiere kan
+          gjennomføre en ryddig prosess uten å miste kontrollen.
+        </p>
+      </div>
+    </section>
+
+    <section class="about-section">
+      <div class="about-section-heading">
+        <p class="about-section-label">Hva plattformen gjør</p>
+        <h2>Fra annonse til budrunde på ett sted.</h2>
+      </div>
+
+      <div class="about-feature-grid">
+        <article class="about-feature-card">
+          <span class="about-feature-number">01</span>
+          <h3>Strukturerte arealannonser</h3>
+          <p>
+            Grunneiere legger inn areal, beliggenhet, jordkvalitet,
+            leieperiode og praktiske vilkår i et format som er enkelt å lese.
+          </p>
+        </article>
+        <article class="about-feature-card">
+          <span class="about-feature-number">02</span>
+          <h3>Bedre grunnlag for vurdering</h3>
+          <p>
+            Kart, arealdata og tydelige beskrivelser gjør det lettere for
+            bønder å finne jord som passer driften deres.
+          </p>
+        </article>
+        <article class="about-feature-card">
+          <span class="about-feature-number">03</span>
+          <h3>Åpen budgivning</h3>
+          <p>
+            Bud registreres direkte i plattformen, slik at prosessen blir mer
+            etterprøvbar og enklere å følge for begge sider.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section class="about-section about-principles">
+      <div class="about-section-heading">
+        <p class="about-section-label">Prinsipper</p>
+        <h2>Bygget for norsk landbruk, ikke som en generell annonseportal.</h2>
+      </div>
+
+      <div class="about-principle-list">
+        <div class="about-principle">
+          <h3>Lokalt nok til å være relevant</h3>
+          <p>
+            Fylke, kommune, jordtype og praktisk bruk må være tydelig fra
+            starten. Jord er ikke en standard vare.
+          </p>
+        </div>
+        <div class="about-principle">
+          <h3>Profesjonelt nok til å skape tillit</h3>
+          <p>
+            Leieprosessen trenger sporbarhet, tydelige tidsfrister og mindre
+            rom for misforståelser.
+          </p>
+        </div>
+        <div class="about-principle">
+          <h3>Enkelt nok til å faktisk bli brukt</h3>
+          <p>
+            Plattformen må fungere for travle bønder og grunneiere, også når de
+            bare skal sjekke status eller legge inn et bud.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-section about-team-section">
+      <div class="about-team-intro">
+        <p class="about-section-label">Teamet</p>
+        <h2>Co-gründere med ansvar for drift, produkt og teknologi.</h2>
+        <p>
+          Jordleie.no utvikles av et lite team som jobber tett på behovene i
+          markedet. Målet er en praktisk tjeneste som tåler reell bruk, ikke en
+          presentasjon av en idé.
+        </p>
+      </div>
+
+      <div class="about-team-grid">
+        <% [
+          { name: "Erling Mysen", role: "Co-gründer og daglig leder", initial: "EM" },
+          { name: "Kristian Mathias Røhne", role: "Co-gründer og produktsjef", initial: "KR" },
+          { name: "Pavel Gulin", role: "Co-gründer og teknologisjef", initial: "PG" }
+        ].forEach(person => { %>
+          <article class="about-team-card">
+            <div class="about-avatar" aria-hidden="true"><%= person.initial %></div>
+            <div>
+              <h3><%= person.name %></h3>
+              <p><%= person.role %></p>
+            </div>
+          </article>
+        <% }) %>
+      </div>
+    </section>
+
+    <section class="about-cta">
+      <div>
+        <p class="about-section-label">Neste steg</p>
+        <h2>Har du jord å leie ut, eller trenger du mer areal?</h2>
+      </div>
+      <div class="about-cta-actions">
+        <a href="/lag-annonse" class="btn-primary">Legg ut jord</a>
+        <a href="/kontakt" class="btn-outline">Kontakt oss</a>
+      </div>
+    </section>
   </div>
 
   <%- include('partials/footer') %>
