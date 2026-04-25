@@ -6,22 +6,21 @@
   <title><%= title %></title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wdth,wght@0,75..100,400..700;1,75..100,400..700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/landing.css">
   <style>
     body {
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      background:
-        radial-gradient(circle at top, rgba(123, 162, 81, 0.16), transparent 32%),
-        linear-gradient(180deg, #f6f8ef 0%, #eef2e2 100%);
+      background: linear-gradient(180deg, var(--jl-surface) 0%, var(--jl-surface-container-low) 100%);
+      overflow-x: hidden;
     }
 
     .auth-nav {
       background: rgba(255,255,255,0.88);
       backdrop-filter: blur(10px);
-      border-bottom: 1px solid rgba(45,90,39,0.08);
+      border-bottom: 1px solid rgba(6,27,14,0.08);
       padding: 18px 32px;
       display: flex;
       align-items: center;
@@ -29,17 +28,17 @@
     }
 
     .auth-page {
-      flex: 1;
       display: grid;
       grid-template-columns: minmax(320px, 470px) minmax(320px, 520px);
       gap: 36px;
-      align-items: center;
+      align-items: start;
       justify-content: center;
-      padding: 40px 24px;
+      padding: 64px 24px 40px;
     }
 
     .auth-side {
       padding: 28px 8px;
+      min-width: 0;
     }
 
     .auth-kicker {
@@ -47,8 +46,8 @@
       align-items: center;
       gap: 8px;
       padding: 8px 12px;
-      border-radius: 999px;
-      background: rgba(45,90,39,0.08);
+      border-radius: var(--radius-full);
+      background: rgba(6,27,14,0.08);
       color: var(--green-dark);
       font-size: 0.82rem;
       font-weight: 700;
@@ -57,15 +56,15 @@
     }
 
     .auth-side h1 {
-      font-size: clamp(2.2rem, 4vw, 3.5rem);
-      line-height: 1;
-      letter-spacing: -0.05em;
+      font-size: clamp(1.9rem, 3.6vw, 3rem);
+      line-height: 1.15;
+      letter-spacing: -0.02em;
       margin-bottom: 16px;
-      color: #20371d;
+      color: var(--green);
     }
 
     .auth-side p {
-      color: #405642;
+      color: var(--text-mid);
       font-size: 1rem;
       line-height: 1.65;
       max-width: 38rem;
@@ -82,35 +81,39 @@
       gap: 12px;
       align-items: flex-start;
       padding: 14px 16px;
-      border-radius: 18px;
+      border-radius: var(--radius-lg);
       background: rgba(255,255,255,0.72);
-      border: 1px solid rgba(45,90,39,0.08);
+      border: 1px solid rgba(6,27,14,0.08);
     }
 
     .auth-point strong {
       display: block;
       margin-bottom: 3px;
-      color: #20371d;
+      color: var(--green);
     }
 
     .auth-point span {
-      color: #5d6f5e;
+      color: var(--text-mid);
       font-size: 0.92rem;
     }
 
     .auth-card {
       background: rgba(255,255,255,0.92);
-      border: 1px solid rgba(45,90,39,0.08);
-      border-radius: 28px;
+      border: 1px solid rgba(6,27,14,0.08);
+      border-radius: var(--radius-xl);
       padding: 34px;
-      box-shadow: 0 28px 80px rgba(27, 54, 25, 0.12);
+      box-shadow: var(--shadow-lg);
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
     }
 
     .auth-tabs {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      background: #eef2e2;
-      border-radius: 999px;
+      background: var(--green-pale);
+      border-radius: var(--radius-full);
       padding: 4px;
       margin-bottom: 26px;
     }
@@ -120,34 +123,34 @@
       justify-content: center;
       align-items: center;
       text-decoration: none;
-      color: #506450;
+      color: var(--text-mid);
       font-weight: 700;
       font-size: 0.92rem;
-      border-radius: 999px;
+      border-radius: var(--radius-full);
       min-height: 42px;
     }
 
     .auth-tab.active {
-      background: #ffffff;
-      color: #20371d;
-      box-shadow: 0 10px 24px rgba(27, 54, 25, 0.08);
+      background: var(--bg-card);
+      color: var(--green);
+      box-shadow: var(--shadow);
     }
 
     .auth-card h2 {
       margin-bottom: 8px;
       font-size: 1.6rem;
       letter-spacing: -0.03em;
-      color: #20371d;
+      color: var(--green);
     }
 
     .auth-card p {
-      color: #5d6f5e;
+      color: var(--text-mid);
       margin-bottom: 24px;
       line-height: 1.6;
     }
 
     .auth-alert {
-      border-radius: 16px;
+      border-radius: var(--radius-lg);
       padding: 14px 16px;
       margin-bottom: 18px;
       font-size: 0.92rem;
@@ -155,15 +158,15 @@
     }
 
     .auth-alert.error {
-      background: #fff1ef;
-      color: #8a3328;
-      border: 1px solid #f5c2b8;
+      background: var(--jl-error-container);
+      color: var(--jl-on-error-container);
+      border: 1px solid var(--jl-error-container);
     }
 
     .auth-alert.success {
-      background: #eef8eb;
-      color: #29552d;
-      border: 1px solid #c9dfc2;
+      background: var(--green-pale);
+      color: var(--green);
+      border: 1px solid var(--green-pale);
     }
 
     .auth-form {
@@ -179,7 +182,7 @@
     .auth-field label {
       font-size: 0.8rem;
       font-weight: 700;
-      color: #506450;
+      color: var(--text-mid);
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
@@ -187,18 +190,18 @@
     .auth-field input {
       width: 100%;
       min-height: 50px;
-      border: 1px solid rgba(45,90,39,0.14);
-      border-radius: 14px;
+      border: 1px solid rgba(6,27,14,0.14);
+      border-radius: var(--radius-md);
       padding: 0 14px;
       font: inherit;
-      background: #fff;
-      color: #20371d;
+      background: var(--bg-card);
+      color: var(--green);
     }
 
     .auth-field input:focus {
       outline: none;
-      border-color: #4f7a45;
-      box-shadow: 0 0 0 4px rgba(79,122,69,0.12);
+      border-color: var(--green);
+      box-shadow: 0 0 0 4px rgba(6,27,14,0.12);
     }
 
     .auth-submit {
@@ -210,13 +213,13 @@
 
     .auth-footnote {
       margin-top: 16px;
-      color: #728271;
+      color: var(--text-muted);
       font-size: 0.82rem;
       line-height: 1.5;
     }
 
     .auth-footnote a {
-      color: #2d5a27;
+      color: var(--green);
       font-weight: 700;
       text-decoration: none;
     }
@@ -224,6 +227,8 @@
     @media (max-width: 920px) {
       .auth-page {
         grid-template-columns: 1fr;
+        gap: 24px;
+        padding: 40px 16px;
       }
 
       .auth-side {

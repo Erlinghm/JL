@@ -1,96 +1,226 @@
 <%- include('partials/head') %>
 <%- include('partials/sidebar') %>
+<%
+  const displayName = user.fullName || user.email || "Bruker";
+  const nameParts = displayName.split(/\s+/).filter(Boolean);
+  const initials = (
+    nameParts.length > 1
+      ? nameParts.map((part) => part[0]).join("").slice(0, 2)
+      : displayName.replace(/[^A-Za-z0-9ÆØÅæøå]/g, "").slice(0, 2)
+  ).toUpperCase();
+  const memberSince = new Intl.DateTimeFormat("no-NO", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(user.createdAt));
+  const profile = user.profile || {};
+  const isAdmin = Boolean(user.isAdmin);
+%>
 
 <main class="main-content">
-
-  <div class="page-header">
-    <h1 style="display:flex;align-items:center;gap:8px;">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      Min bruker
-    </h1>
-    <a href="/lag-annonse" class="btn btn-primary">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-      Legg ut jord
-    </a>
-  </div>
-
-  <div class="form-page" style="max-width:960px;">
-    <% if (success) { %>
-      <div style="margin-bottom:18px; border:1px solid #c9dfc2; background:#eef8eb; color:#29552d; padding:14px 16px; border-radius:14px;"><%= success %></div>
+  <div class="mb-shell">
+    <% if (success || error) { %>
+      <div class="mb-alert-stack">
+        <% if (success) { %>
+          <div class="mb-alert mb-alert--success" role="status"><%= success %></div>
+        <% } %>
+        <% if (error) { %>
+          <div class="mb-alert mb-alert--error" role="alert"><%= error %></div>
+        <% } %>
+      </div>
     <% } %>
 
-    <% if (error) { %>
-      <div style="margin-bottom:18px; border:1px solid #f5c2b8; background:#fff1ef; color:#8a3328; padding:14px 16px; border-radius:14px;"><%= error %></div>
-    <% } %>
-
-    <div class="form-section" style="display:grid; grid-template-columns:auto 1fr auto; gap:24px; align-items:center;">
-      <div style="width:80px; height:80px; border-radius:50%; background:var(--green-dark); display:flex; align-items:center; justify-content:center; color:white; font-size:2rem; font-weight:800;">
-        <%= (user.fullName || user.email).split(" ").map((part) => part[0]).join("").slice(0,2).toUpperCase() %>
+    <section class="mb-card mb-identity" aria-label="Brukeroversikt">
+      <div class="mb-identity-main">
+        <div class="mb-avatar" aria-hidden="true"><%= initials || "BR" %></div>
+        <div class="mb-identity-copy">
+          <h2 class="mb-identity-name"><%= displayName %></h2>
+          <p class="mb-identity-email"><%= user.email %></p>
+          <div class="mb-badges">
+            <span class="mb-badge <%= isAdmin ? 'mb-badge--admin' : 'mb-badge--member' %>">
+              <%= isAdmin ? "Administrator" : "Standardkonto" %>
+            </span>
+            <span class="mb-badge mb-badge--active">
+              <span class="mb-badge-dot" aria-hidden="true"></span>
+              Aktiv
+            </span>
+          </div>
+          <p class="mb-meta">Medlem siden <%= memberSince %></p>
+        </div>
       </div>
-      <div>
-        <h2 style="font-size:1.3rem; font-weight:800; margin-bottom:4px;"><%= user.fullName %></h2>
-        <p style="color:var(--text-light); font-size:0.875rem;"><%= user.email %></p>
-        <p style="color:var(--text-mid); font-size:0.82rem; margin-top:4px;">
-          Rolle: <%= user.role %> · Status: <%= user.status %>
-        </p>
-      </div>
-      <form action="/logg-ut" method="POST">
-        <button type="submit" class="btn btn-outline">Logg ut</button>
+      <form action="/logg-ut" method="POST" class="mb-inline-form">
+        <button type="submit" class="btn btn-outline mb-inline-button">Logg ut</button>
       </form>
-    </div>
+    </section>
 
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:22px;">
-      <div class="form-section" style="grid-column:1/-1;">
-        <div class="form-section-title" style="display:flex;align-items:center;gap:8px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Kontooversikt</div>
-        <div style="display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:14px;">
-          <div style="padding:18px; border-radius:14px; background:var(--bg-card); border:1px solid var(--border);">
-            <div style="font-size:0.78rem; color:var(--text-light); text-transform:uppercase; letter-spacing:0.06em;">Fylke</div>
-            <div style="font-size:1rem; font-weight:700; margin-top:6px;"><%= user.profile?.county || "Ikke satt" %></div>
-          </div>
-          <div style="padding:18px; border-radius:14px; background:var(--bg-card); border:1px solid var(--border);">
-            <div style="font-size:0.78rem; color:var(--text-light); text-transform:uppercase; letter-spacing:0.06em;">Telefon</div>
-            <div style="font-size:1rem; font-weight:700; margin-top:6px;"><%= user.phone || "Ikke satt" %></div>
-          </div>
-          <div style="padding:18px; border-radius:14px; background:var(--bg-card); border:1px solid var(--border);">
-            <div style="font-size:0.78rem; color:var(--text-light); text-transform:uppercase; letter-spacing:0.06em;">Opprettet</div>
-            <div style="font-size:1rem; font-weight:700; margin-top:6px;"><%= new Date(user.createdAt).toLocaleDateString("no-NO") %></div>
-          </div>
+    <section class="mb-metrics" aria-label="Kontostatistikk">
+      <article class="mb-card mb-metric">
+        <div class="mb-metric-top">
+          <span class="mb-eyebrow">Aktive annonser</span>
+          <span class="mb-metric-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 10.5 12 3l9 7.5"></path>
+              <path d="M5 9.5V20h14V9.5"></path>
+              <path d="M9 20v-6h6v6"></path>
+            </svg>
+          </span>
         </div>
-      </div>
+        <p class="mb-metric-value"><%= stats.activeListings %></p>
+        <p class="mb-metric-help">Publiserte av deg</p>
+      </article>
 
-      <div class="form-section">
-        <div class="form-section-title" style="display:flex;align-items:center;gap:8px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Kontoinnstillinger</div>
-        <form action="/min-bruker" method="POST" style="display:flex; flex-direction:column; gap:14px;">
-          <div class="form-group">
-            <label class="form-label">Navn</label>
-            <input type="text" class="form-input" name="fullName" value="<%= user.fullName %>" required>
+      <article class="mb-card mb-metric">
+        <div class="mb-metric-top">
+          <span class="mb-eyebrow">Aktive bud</span>
+          <span class="mb-metric-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 5 19 10"></path>
+              <path d="M11 8 16 13"></path>
+              <path d="M7 12l5 5"></path>
+              <path d="M4 20 14 10"></path>
+              <path d="M16 3l5 5"></path>
+              <path d="M2 22h8"></path>
+            </svg>
+          </span>
+        </div>
+        <p class="mb-metric-value"><%= stats.activeBids %></p>
+        <p class="mb-metric-help">Åpne auksjoner du deltar i</p>
+      </article>
+
+      <article class="mb-card mb-metric">
+        <div class="mb-metric-top">
+          <span class="mb-eyebrow">Kontotype</span>
+          <span class="mb-metric-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3 5 6v6c0 4.4 2.8 8.4 7 9.8 4.2-1.4 7-5.4 7-9.8V6l-7-3Z"></path>
+              <path d="m9.5 12 1.7 1.7 3.3-3.7"></path>
+            </svg>
+          </span>
+        </div>
+        <p class="mb-metric-value mb-metric-value--type"><%= isAdmin ? "Administrator" : "Standard" %></p>
+        <p class="mb-metric-help">Administrert via Supabase Auth</p>
+      </article>
+    </section>
+
+    <div class="mb-body">
+      <section class="mb-card">
+        <div class="mb-card-header">
+          <h2 class="mb-card-title">Profilinformasjon</h2>
+        </div>
+
+        <form action="/min-bruker" method="POST" class="mb-form">
+          <fieldset class="mb-fieldset">
+            <legend class="mb-fieldset-title">Identitet</legend>
+            <div class="mb-field-grid">
+              <div class="form-group mb-form-group">
+                <label class="form-label mb-label" for="fullName">Navn</label>
+                <input
+                  id="fullName"
+                  type="text"
+                  name="fullName"
+                  class="form-input mb-input"
+                  value="<%= user.fullName %>"
+                  required
+                >
+              </div>
+
+              <div class="form-group mb-form-group">
+                <label class="form-label mb-label" for="email">E-post</label>
+                <input
+                  id="email"
+                  type="email"
+                  class="form-input mb-input mb-input--readonly"
+                  value="<%= user.email %>"
+                  readonly
+                  aria-readonly="true"
+                >
+                <p class="mb-field-help">E-post administreres via Supabase Auth</p>
+              </div>
+            </div>
+          </fieldset>
+
+          <div class="mb-separator" aria-hidden="true"></div>
+
+          <fieldset class="mb-fieldset">
+            <legend class="mb-fieldset-title">Drift</legend>
+            <div class="mb-field-grid">
+              <div class="form-group mb-form-group">
+                <label class="form-label mb-label" for="county">Fylke</label>
+                <input
+                  id="county"
+                  type="text"
+                  name="county"
+                  class="form-input mb-input"
+                  value="<%= profile.county || '' %>"
+                  placeholder="F.eks. Innlandet"
+                >
+              </div>
+
+              <div class="form-group mb-form-group">
+                <label class="form-label mb-label" for="bio">Kort bio</label>
+                <textarea
+                  id="bio"
+                  name="bio"
+                  class="form-textarea mb-input mb-textarea"
+                  placeholder="Fortell kort om deg og hva du bruker plattformen til."
+                ><%= profile.bio || '' %></textarea>
+              </div>
+            </div>
+          </fieldset>
+
+          <div class="mb-form-actions">
+            <button type="submit" class="btn btn-primary--brand mb-submit">Lagre endringer</button>
           </div>
-          <div class="form-group">
-            <label class="form-label">E-post</label>
-            <input type="email" class="form-input" value="<%= user.email %>" readonly>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Fylke</label>
-            <input type="text" class="form-input" name="county" value="<%= user.profile?.county || '' %>" placeholder="F.eks. Innlandet">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Kort bio</label>
-            <textarea class="form-textarea" name="bio" rows="4" placeholder="Fortell kort om deg og hva du bruker plattformen til."><%= user.profile?.bio || '' %></textarea>
-          </div>
-          <button type="submit" class="btn btn-primary">Lagre endringer</button>
         </form>
-      </div>
+      </section>
 
-      <div class="form-section">
-        <div class="form-section-title" style="display:flex;align-items:center;gap:8px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Neste steg</div>
-        <div style="display:grid; gap:12px;">
-          <a href="/lag-annonse" class="btn btn-primary" style="justify-content:center;">Opprett ny annonse</a>
-          <a href="/auksjoner" class="btn btn-outline" style="justify-content:center;">Utforsk auksjoner</a>
-        </div>
-        <div style="margin-top:18px; font-size:0.88rem; color:var(--text-mid); line-height:1.6;">
-          Brukerprofilen er nå koblet til Supabase Auth. Innloggingen skjer via Supabase, mens denne siden leser og oppdaterer den lokale `User`-profilen.
-        </div>
-      </div>
+      <aside class="mb-sidebar">
+        <section class="mb-card">
+          <div class="mb-card-header">
+            <h2 class="mb-card-title">Hurtighandlinger</h2>
+          </div>
+
+          <div class="mb-action-stack">
+            <a href="/lag-annonse" class="btn btn-primary mb-action-button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 5v14"></path>
+                <path d="M5 12h14"></path>
+              </svg>
+              Opprett ny annonse
+            </a>
+
+            <a href="/auksjoner" class="btn btn-outline mb-action-button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 12h14"></path>
+                <path d="m13 5 7 7-7 7"></path>
+              </svg>
+              Se auksjoner
+            </a>
+          </div>
+
+          <p class="mb-card-copy mb-card-copy--offset">Administrer eiendom og budrunder fra ett sted.</p>
+        </section>
+
+        <section class="mb-card">
+          <div class="mb-card-header">
+            <div class="mb-card-title-row">
+              <span class="mb-card-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 3 5 6v6c0 4.4 2.8 8.4 7 9.8 4.2-1.4 7-5.4 7-9.8V6l-7-3Z"></path>
+                  <path d="m9.5 12 1.7 1.7 3.3-3.7"></path>
+                </svg>
+              </span>
+              <h2 class="mb-card-title">Kontosikkerhet</h2>
+            </div>
+          </div>
+
+          <p class="mb-card-copy">Innlogging og kontotilgang administreres via Supabase Auth. Bruk utlogging nedenfor for å avslutte økten på denne enheten.</p>
+
+          <form action="/logg-ut" method="POST" class="mb-block-form">
+            <button type="submit" class="btn btn-outline mb-action-button">Logg ut</button>
+          </form>
+        </section>
+      </aside>
     </div>
   </div>
 

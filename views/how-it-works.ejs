@@ -2,87 +2,107 @@
 <%- include('partials/sidebar') %>
 
 <main class="main-content">
+  <div class="guide-page">
+    <section class="guide-hero">
+      <div class="guide-hero-copy">
+        <p class="guide-eyebrow">Slik fungerer Jordleie.no</p>
+        <h1>En ryddig prosess fra areal til avtale.</h1>
+        <p>
+          Få oversikt over hvordan grunneiere legger ut jord, hvordan bønder
+          vurderer arealene, og hvordan budrunden går fra interesse til avtale.
+        </p>
+      </div>
+      <div class="guide-hero-panel" aria-label="Kort oppsummert">
+        <div>
+          <span class="guide-panel-label">Prosess</span>
+          <strong>2 roller</strong>
+          <p>Grunneier og leietaker følger hver sin enkle arbeidsflyt.</p>
+        </div>
+        <div>
+          <span class="guide-panel-label">Bud</span>
+          <strong>Åpent og sporbart</strong>
+          <p>Pris, frister og vilkår samles i samme prosess.</p>
+        </div>
+      </div>
+    </section>
 
-  <div class="page-header">
-    <h1 style="display:flex;align-items:center;gap:8px;">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
-      Hvordan kjøpe &amp; selge
-    </h1>
-  </div>
-
-  <div class="static-page">
-    <h1>Alt du trenger å vite om jordleie på Jordleie.no</h1>
-    <p class="lead">Her forklarer vi steg for steg hvordan auksjonsprosessen fungerer – enten du er grunneier som vil leie ut, eller bonde på jakt etter mer areal.</p>
-
-    <!-- For landowners -->
-    <div style="margin-bottom:40px;">
-      <div style="background:var(--green-dark); color:white; display:inline-block; padding:4px 14px; border-radius:20px; font-size:0.78rem; font-weight:700; margin-bottom:16px; text-transform:uppercase; letter-spacing:0.4px; display:inline-flex; align-items:center; gap:6px;">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        For grunneiere
+    <section class="guide-section" aria-labelledby="guide-landowners">
+      <div class="guide-section-heading">
+        <p class="guide-eyebrow">For grunneiere</p>
+        <h2 id="guide-landowners">Legg ut jord uten å miste kontrollen.</h2>
       </div>
 
-      <% [
-        { step:"1", title:"Registrer deg", text:"Opprett en gratis bruker på Jordleie.no. Vi verifiserer ditt personnummer og gårdsnummer via Altinn for å sikre at du er rettmessig eier av arealet." },
-        { step:"2", title:"Lag annonse", text:"Gå til «Lag annonse» og fyll ut informasjon om arealet. Du tegner inn teigene direkte på satellittkartet. Systemet beregner automatisk areal i dekar." },
-        { step:"3", title:"Sett auksjonsbetingelser", text:"Velg startbud (kr per dekar per år), leieperiode og når auksjonen starter og slutter. Du kan sette en reserve-pris som holdes skjult." },
-        { step:"4", title:"Motta bud", text:"Registrerte bønder legger inn bud. Du ser hvem som byr, og kan lese bydernes profiler og referanser." },
-        { step:"5", title:"Inngå avtale", text:"Vinneren kontaktes automatisk og dere inngår en digital leieavtale basert på vår standardmal. Alt er i henhold til jordlovgivningen." }
-      ].forEach(item => { %>
-        <div style="display:flex; gap:16px; margin-bottom:18px; align-items:flex-start;">
-          <div style="width:32px; height:32px; background:var(--green-pale); border:2px solid #c1ddb8; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.8rem; font-weight:800; color:var(--green-dark); flex-shrink:0; margin-top:2px;">
-            <%= item.step %>
-          </div>
-          <div>
-            <strong style="font-size:0.95rem; color:var(--text-dark);"><%= item.title %></strong>
-            <p style="font-size:0.875rem; color:var(--text-mid); margin-top:3px; line-height:1.6;"><%= item.text %></p>
-          </div>
-        </div>
-      <% }) %>
-    </div>
+      <div class="guide-steps">
+        <% [
+          { step:"01", title:"Registrer deg", text:"Opprett en gratis bruker. Vi kobler profilen til arealet ditt slik at annonsen får riktig eier og kontaktpunkt." },
+          { step:"02", title:"Lag annonse", text:"Legg inn beliggenhet, areal, jordkvalitet, leieperiode og praktiske vilkår. Teigene kan tegnes direkte på kartet." },
+          { step:"03", title:"Sett auksjonsvilkår", text:"Velg startbud, budfrist og eventuelle minimumskrav før annonsen publiseres." },
+          { step:"04", title:"Følg budrunden", text:"Se bud og interessenter underveis. Plattformen gir en tydelig oversikt over status og høyeste bud." },
+          { step:"05", title:"Inngå avtale", text:"Når prosessen er ferdig kan partene gå videre med dokumentasjon og leieavtale på et tydelig grunnlag." }
+        ].forEach(item => { %>
+          <article class="guide-step-card">
+            <span class="guide-step-number"><%= item.step %></span>
+            <div>
+              <h3><%= item.title %></h3>
+              <p><%= item.text %></p>
+            </div>
+          </article>
+        <% }) %>
+      </div>
+    </section>
 
-    <!-- For renters -->
-    <div>
-      <div style="background:var(--green-mid); color:white; display:inline-block; padding:4px 14px; border-radius:20px; font-size:0.78rem; font-weight:700; margin-bottom:16px; text-transform:uppercase; letter-spacing:0.4px; display:inline-flex; align-items:center; gap:6px;">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-        For leietakere
+    <section class="guide-section guide-section--split" aria-labelledby="guide-renters">
+      <div class="guide-section-heading guide-section-heading--sticky">
+        <p class="guide-eyebrow">For leietakere</p>
+        <h2 id="guide-renters">Finn arealer som passer driften din.</h2>
+        <p>
+          Bruk filtrering, kart og strukturert informasjon til å vurdere om
+          arealet passer før du legger inn bud.
+        </p>
+        <a href="/auksjoner" class="btn btn-primary">Se auksjoner</a>
       </div>
 
-      <% [
-        { step:"1", title:"Opprett profil", text:"Registrer deg og fyll ut din driftsprofil: hvilke vekster du dyrker, ditt gårdsnummer, og referanser fra tidligere leieforhold." },
-        { step:"2", title:"Bla gjennom arealer", text:"Gå til Auksjoner og filtrer på fylke, jordtype og størrelse. Hvert areal viser kart, jordsammensetning og fullstendig historikk." },
-        { step:"3", title:"Legg inn bud", text:"Bud er per dekar per år. Du ser alltid høyeste bud i sanntid. Systemet sender deg varsling om du blir overbydd." },
-        { step:"4", title:"Vinn auksjonen", text:"Høyeste bud når fristen går ut vinner. Betalingsgaranti settes opp og leieavtale signeres digitalt via BankID." },
-        { step:"5", title:"Start driften", text:"Etter signering får du tilgang til grunneiers kontaktinfo og dere avtaler overtakelse. Lykke til med driften!" }
-      ].forEach(item => { %>
-        <div style="display:flex; gap:16px; margin-bottom:18px; align-items:flex-start;">
-          <div style="width:32px; height:32px; background:var(--beige-light); border:2px solid var(--border); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.8rem; font-weight:800; color:var(--green-dark); flex-shrink:0; margin-top:2px;">
-            <%= item.step %>
-          </div>
-          <div>
-            <strong style="font-size:0.95rem; color:var(--text-dark);"><%= item.title %></strong>
-            <p style="font-size:0.875rem; color:var(--text-mid); margin-top:3px; line-height:1.6;"><%= item.text %></p>
-          </div>
-        </div>
-      <% }) %>
-    </div>
+      <div class="guide-checklist">
+        <% [
+          { title:"Opprett profil", text:"Fyll inn driftsprofil og kontaktinformasjon slik at grunneier vet hvem som byr." },
+          { title:"Bla gjennom arealer", text:"Filtrer på fylke, jordtype, størrelse og status for å finne relevante annonser." },
+          { title:"Vurder vilkår", text:"Les leieperiode, praktisk tilgang, jordkvalitet og eventuelle krav før bud legges inn." },
+          { title:"Legg inn bud", text:"Bud gis per dekar per år. Du kan følge med hvis det kommer høyere bud." },
+          { title:"Avklar overtakelse", text:"Når budrunden er ferdig går partene videre med avtale, kontakt og praktiske detaljer." }
+        ].forEach(item => { %>
+          <article class="guide-check-item">
+            <span aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            </span>
+            <div>
+              <h3><%= item.title %></h3>
+              <p><%= item.text %></p>
+            </div>
+          </article>
+        <% }) %>
+      </div>
+    </section>
 
-    <!-- FAQ -->
-    <h2>Vanlige spørsmål</h2>
+    <section class="guide-faq" aria-labelledby="guide-faq-title">
+      <div class="guide-section-heading">
+        <p class="guide-eyebrow">Vanlige spørsmål</p>
+        <h2 id="guide-faq-title">Svar på det folk oftest lurer på.</h2>
+      </div>
 
-    <% [
-      { q:"Hva koster det å bruke Jordleie.no?", a:"Det er gratis å opprette profil og bla gjennom annonser. Grunneiere betaler en liten provisjon (2%) av total leiesum ved vellykket auksjon." },
-      { q:"Er leieavtalene juridisk bindende?", a:"Ja. Alle avtaler inngås i henhold til norsk jordlovgivning og er bindende fra begge parters BankID-signering." },
-      { q:"Hva skjer om leietaker misligholder?", a:"Vi tilbyr tvisteløsning og samarbeider med forsikringsselskaper for å beskytte grunneiere mot manglende betaling." },
-      { q:"Kan jeg sette en reserve-pris?", a:"Ja. Reserve-prisen er skjult for budgivere og auksjonen er kun bindende om høyeste bud overstiger reserve-prisen." }
-    ].forEach(faq => { %>
-      <details style="border:1.5px solid var(--border); border-radius:var(--radius); margin-bottom:10px; padding:14px 18px;">
-        <summary style="font-weight:700; font-size:0.9rem; cursor:pointer; color:var(--text-dark);">
-          <%= faq.q %>
-        </summary>
-        <p style="font-size:0.875rem; color:var(--text-mid); margin-top:10px; line-height:1.6;"><%= faq.a %></p>
-      </details>
-    <% }) %>
-
+      <div class="guide-faq-list">
+        <% [
+          { q:"Hva koster det å bruke Jordleie.no?", a:"Det er gratis å opprette profil og bla gjennom annonser. Grunneiere betaler en provisjon ved vellykket utleie." },
+          { q:"Er leieavtalene juridisk bindende?", a:"Avtaler inngås mellom grunneier og leietaker. Plattformen gjør prosessen ryddig og dokumentert, men partene må fortsatt sikre at avtalen passer deres forhold." },
+          { q:"Kan jeg sette en minimumspris?", a:"Ja. Grunneier kan bruke vilkår og startbud for å styre hva som er akseptabelt før prosessen publiseres." },
+          { q:"Må jeg besøke arealet før jeg byr?", a:"Det anbefales ved større eller komplekse arealer. Kart og beskrivelser gir et godt førstegrunnlag, men lokal vurdering kan fortsatt være nyttig." }
+        ].forEach(faq => { %>
+          <details class="guide-faq-item">
+            <summary><%= faq.q %></summary>
+            <p><%= faq.a %></p>
+          </details>
+        <% }) %>
+      </div>
+    </section>
   </div>
 
   <%- include('partials/footer') %>

@@ -24,22 +24,22 @@
 
         <div style="margin-bottom:1rem;">
           <label for="title">Tittel *</label><br>
-          <input type="text" id="title" name="title" value="<%= farm.title %>" required style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:6px; margin-top:0.25rem;">
+          <input type="text" id="title" name="title" value="<%= farm.title %>" required style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:var(--radius); margin-top:0.25rem;">
         </div>
 
         <div style="margin-bottom:1rem;">
           <label for="description">Beskrivelse *</label><br>
-          <textarea id="description" name="description" rows="4" required style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:6px; margin-top:0.25rem;"><%= farm.description %></textarea>
+          <textarea id="description" name="description" rows="4" required style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:var(--radius); margin-top:0.25rem;"><%= farm.description %></textarea>
         </div>
 
         <div style="margin-bottom:1rem;">
           <label for="ownerName">Eiers navn *</label><br>
-          <input type="text" id="ownerName" name="ownerName" value="<%= farm.ownerName %>" required style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:6px; margin-top:0.25rem;">
+          <input type="text" id="ownerName" name="ownerName" value="<%= farm.ownerName %>" required style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:var(--radius); margin-top:0.25rem;">
         </div>
 
         <div style="margin-bottom:1rem;">
           <label for="ownerDescription">Om eier</label><br>
-          <textarea id="ownerDescription" name="ownerDescription" rows="2" style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:6px; margin-top:0.25rem;"><%= farm.ownerDescription || '' %></textarea>
+          <textarea id="ownerDescription" name="ownerDescription" rows="2" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:var(--radius); margin-top:0.25rem;"><%= farm.ownerDescription || '' %></textarea>
         </div>
       </fieldset>
 
@@ -49,17 +49,17 @@
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
           <div>
             <label for="municipality">Kommune *</label><br>
-            <input type="text" id="municipality" name="municipality" value="<%= farm.municipality %>" required style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:6px; margin-top:0.25rem;">
+            <input type="text" id="municipality" name="municipality" value="<%= farm.municipality %>" required style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:var(--radius); margin-top:0.25rem;">
           </div>
           <div>
             <label for="fylke">Fylke *</label><br>
-            <input type="text" id="fylke" name="fylke" value="<%= farm.fylke %>" required style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:6px; margin-top:0.25rem;">
+            <input type="text" id="fylke" name="fylke" value="<%= farm.fylke %>" required style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:var(--radius); margin-top:0.25rem;">
           </div>
         </div>
 
         <div style="margin-bottom:1rem;">
           <label for="address">Adresse</label><br>
-          <input type="text" id="address" name="address" value="<%= farm.address || '' %>" style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:6px; margin-top:0.25rem;">
+          <input type="text" id="address" name="address" value="<%= farm.address || '' %>" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:var(--radius); margin-top:0.25rem;">
         </div>
       </fieldset>
 
@@ -69,17 +69,17 @@
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
           <div>
             <label for="sizeDekar">Størrelse (dekar) *</label><br>
-            <input type="number" id="sizeDekar" name="sizeDekar" value="<%= farm.sizeDekar %>" min="0" step="0.1" required style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:6px; margin-top:0.25rem;">
+            <input type="number" id="sizeDekar" name="sizeDekar" value="<%= farm.sizeDekar %>" min="0" step="0.1" required style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:var(--radius); margin-top:0.25rem;">
           </div>
           <div>
             <label for="soilType">Jordtype *</label><br>
-            <input type="text" id="soilType" name="soilType" value="<%= farm.soilType %>" required style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:6px; margin-top:0.25rem;">
+            <input type="text" id="soilType" name="soilType" value="<%= farm.soilType %>" required style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:var(--radius); margin-top:0.25rem;">
           </div>
         </div>
 
         <div style="margin-bottom:1rem;">
           <label for="soilQuality">Jordkvalitet *</label><br>
-          <input type="text" id="soilQuality" name="soilQuality" value="<%= farm.soilQuality %>" required style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:6px; margin-top:0.25rem;">
+          <input type="text" id="soilQuality" name="soilQuality" value="<%= farm.soilQuality %>" required style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:var(--radius); margin-top:0.25rem;">
         </div>
       </fieldset>
 
@@ -89,28 +89,28 @@
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
           <div>
             <label for="auctionStart">Auksjon starter *</label><br>
-            <input type="date" id="auctionStart" name="auctionStart" value="<%= farm.auctionStart ? farm.auctionStart.toISOString().substring(0,10) : '' %>" required style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:6px; margin-top:0.25rem;">
+            <input type="date" id="auctionStart" name="auctionStart" value="<%= farm.auctionStart ? farm.auctionStart.toISOString().substring(0,10) : '' %>" required style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:var(--radius); margin-top:0.25rem;">
           </div>
           <div>
             <label for="auctionEnd">Auksjon avsluttes *</label><br>
-            <input type="date" id="auctionEnd" name="auctionEnd" value="<%= farm.auctionEnd ? farm.auctionEnd.toISOString().substring(0,10) : '' %>" required style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:6px; margin-top:0.25rem;">
+            <input type="date" id="auctionEnd" name="auctionEnd" value="<%= farm.auctionEnd ? farm.auctionEnd.toISOString().substring(0,10) : '' %>" required style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:var(--radius); margin-top:0.25rem;">
           </div>
         </div>
 
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
           <div>
             <label for="startingBid">Startpris (kr/dekar) *</label><br>
-            <input type="number" id="startingBid" name="startingBid" value="<%= farm.startingBid %>" min="0" step="1" required style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:6px; margin-top:0.25rem;">
+            <input type="number" id="startingBid" name="startingBid" value="<%= farm.startingBid %>" min="0" step="1" required style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:var(--radius); margin-top:0.25rem;">
           </div>
           <div>
             <label for="rentalPeriodYears">Leieperiode (år) *</label><br>
-            <input type="number" id="rentalPeriodYears" name="rentalPeriodYears" value="<%= farm.rentalPeriodYears %>" min="1" required style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:6px; margin-top:0.25rem;">
+            <input type="number" id="rentalPeriodYears" name="rentalPeriodYears" value="<%= farm.rentalPeriodYears %>" min="1" required style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:var(--radius); margin-top:0.25rem;">
           </div>
         </div>
 
         <div style="margin-bottom:1rem;">
           <label for="status">Status *</label><br>
-          <select id="status" name="status" required style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:6px; margin-top:0.25rem;">
+          <select id="status" name="status" required style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:var(--radius); margin-top:0.25rem;">
             <option value="kommende" <%= farm.status === 'kommende' ? 'selected' : '' %>>Kommende</option>
             <option value="aktiv" <%= farm.status === 'aktiv' ? 'selected' : '' %>>Aktiv</option>
             <option value="avsluttet" <%= farm.status === 'avsluttet' ? 'selected' : '' %>>Avsluttet</option>

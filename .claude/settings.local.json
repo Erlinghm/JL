@@ -7,7 +7,10 @@
       "mcp__supabase__execute_sql",
       "mcp__supabase__get_logs",
       "Bash(python3 -c \" import json, sys data = json.load\\(sys.stdin\\) text = data[0]['text'] logs = json.loads\\(text\\)['result']['result'] for log in logs: msg = log.get\\('event_message', ''\\) try: parsed = json.loads\\(msg\\) action = parsed.get\\('auth_event', {}\\).get\\('action', ''\\) path = parsed.get\\('path', ''\\) level = parsed.get\\('level', ''\\) email = parsed.get\\('auth_event', {}\\).get\\('actor_username', ''\\) if 'signup' in action.lower\\(\\) or 'signup' in path.lower\\(\\) or level == 'error': print\\(f'{log[\\\\\"timestamp\\\\\"]} | action={action} | path={path} | email={email} | level={level}'\\) except: pass \")",
-      "Bash(python3 -c \" import json, sys data = json.load\\(sys.stdin\\) text = data[0]['text'] logs = json.loads\\(text\\)['result']['result'] for log in logs: msg = log.get\\('event_message', ''\\) if log.get\\('level'\\) == 'error': print\\(f'TIMESTAMP: {log[\\\\\"timestamp\\\\\"]}'\\) print\\(f'MSG: {msg[:500]}'\\) print\\('---'\\) \")"
+      "Bash(python3 -c \" import json, sys data = json.load\\(sys.stdin\\) text = data[0]['text'] logs = json.loads\\(text\\)['result']['result'] for log in logs: msg = log.get\\('event_message', ''\\) if log.get\\('level'\\) == 'error': print\\(f'TIMESTAMP: {log[\\\\\"timestamp\\\\\"]}'\\) print\\(f'MSG: {msg[:500]}'\\) print\\('---'\\) \")",
+      "Bash(npm test *)",
+      "Bash(grep -nE \"Instrument|#[0-9a-fA-F]{3,6}|font-family\" /Users/pasha/Desktop/pashatheboss2/Datatjenester/JL/views/admin/edit.ejs /Users/pasha/Desktop/pashatheboss2/Datatjenester/JL/views/admin/new.ejs)",
+      "Bash(node *)"
     ]
   },
   "enableAllProjectMcpServers": true,

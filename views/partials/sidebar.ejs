@@ -1,108 +1,146 @@
-<!-- Left sidebar – platform navigation -->
+<%
+  const sidebarInitial =
+    currentUser && currentUser.fullName && currentUser.fullName.trim()
+      ? currentUser.fullName.trim().charAt(0).toUpperCase()
+      : '?';
+%>
 <aside class="app-sidebar">
-
-  <!-- Logo -->
   <div class="app-sidebar-logo">
     <a href="/" class="app-sidebar-logo-link">
       <span class="app-sidebar-wordmark">Jordleie.no</span>
-      <span class="app-sidebar-tagline">Markedsplass for jordleie</span>
     </a>
   </div>
 
-  <!-- Nav links -->
   <nav class="app-sidebar-nav">
-    <ul>
-
-      <li>
-        <a href="/auksjoner" class="app-sidebar-link">
-          <span class="app-sidebar-icon">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 9-2 2 8 8 2-2"/><path d="M13 5l4 4"/><path d="m5 21 4-2-2-4"/><line x1="4" y1="4" x2="20" y2="20"/></svg>
-          </span>
-          Auksjoner
-        </a>
-      </li>
-
-      <li>
-        <a href="/om-jordleie" class="app-sidebar-link">
-          <span class="app-sidebar-icon">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-          </span>
-          Om Jordleie.no
-        </a>
-      </li>
-
-      <li>
-        <a href="/hvordan-kjope-selge" class="app-sidebar-link">
-          <span class="app-sidebar-icon">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
-          </span>
-          Hvordan kjøpe &amp; selge
-        </a>
-      </li>
-
-      <li>
-        <a href="/artikler" class="app-sidebar-link">
-          <span class="app-sidebar-icon">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a4 4 0 0 1-4-4V6a2 2 0 0 1 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6z"/></svg>
-          </span>
-          Artikler
-        </a>
-      </li>
-
-      <li>
-        <a href="/kontakt" class="app-sidebar-link">
-          <span class="app-sidebar-icon">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-          </span>
-          Kontakt oss
-        </a>
-      </li>
-
-    </ul>
-
-    <div class="app-sidebar-divider"></div>
-
-    <ul>
-      <li>
-        <a href="/min-bruker" class="app-sidebar-link">
-          <span class="app-sidebar-icon">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          </span>
-          Min bruker
-        </a>
-      </li>
-      <% if (!currentUser) { %>
+    <div class="app-sidebar-section">
+      <div class="app-sidebar-section-label">Markedsplass</div>
+      <ul>
         <li>
-          <a href="/logg-inn" class="app-sidebar-link">
-            <span class="app-sidebar-icon">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+          <a href="/auksjoner" class="app-sidebar-link">
+            <span class="app-sidebar-icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m12 8 6-3-6-3v10" />
+                <path d="m8 11.99-5.5 3.14a1 1 0 0 0 0 1.74l8.5 4.86a2 2 0 0 0 2 0l8.5-4.86a1 1 0 0 0 0-1.74L16 12" />
+                <path d="m6.49 12.85 11.02 6.3" />
+                <path d="M17.51 12.85 6.5 19.15" />
+              </svg>
             </span>
-            Logg inn
+            <span>Auksjoner</span>
           </a>
         </li>
-      <% } else if (currentUser.isAdmin || currentUser.role === 'ADMIN') { %>
+
         <li>
-          <a href="/admin/dashboard" class="app-sidebar-link">
-            <span class="app-sidebar-icon">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 4v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V7l7-4z"/><path d="M9 12l2 2 4-4"/></svg>
+          <a href="/om-jordleie" class="app-sidebar-link">
+            <span class="app-sidebar-icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 16v-4" />
+                <path d="M12 8h.01" />
+              </svg>
             </span>
-            Admin
+            <span>Om Jordleie.no</span>
           </a>
         </li>
-      <% } %>
-    </ul>
-  </nav>
 
-  <% if (currentUser) { %>
-    <div class="app-sidebar-divider"></div>
-    <div style="padding:0 22px 22px;">
-      <div style="font-size:0.78rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-light); margin-bottom:8px;">Innlogget som</div>
-      <div style="font-weight:700; color:var(--text);"><%= currentUser.fullName %></div>
-      <div style="font-size:0.84rem; color:var(--text-mid); margin-top:2px;"><%= currentUser.email %></div>
-      <form action="/logg-ut" method="POST" style="margin-top:14px;">
-        <button type="submit" class="btn btn-outline btn-sm" style="width:100%; justify-content:center;">Logg ut</button>
-      </form>
+        <li>
+          <a href="/hvordan-kjope-selge" class="app-sidebar-link">
+            <span class="app-sidebar-icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 7v14" />
+                <path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" />
+              </svg>
+            </span>
+            <span>Hvordan kjøpe &amp; selge</span>
+          </a>
+        </li>
+
+        <li>
+          <a href="/artikler" class="app-sidebar-link">
+            <span class="app-sidebar-icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2" />
+                <path d="M18 14h-8" />
+                <path d="M15 18h-5" />
+                <path d="M10 6h8v4h-8V6Z" />
+              </svg>
+            </span>
+            <span>Artikler</span>
+          </a>
+        </li>
+
+        <li>
+          <a href="/kontakt" class="app-sidebar-link">
+            <span class="app-sidebar-icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4c0-1.1.9-2 2-2h8a2 2 0 0 1 2 2z" />
+                <path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1" />
+              </svg>
+            </span>
+            <span>Kontakt oss</span>
+          </a>
+        </li>
+      </ul>
     </div>
-  <% } %>
 
+    <div class="app-sidebar-section">
+      <div class="app-sidebar-section-label">Konto</div>
+      <ul>
+        <li>
+          <a href="/min-bruker" class="app-sidebar-link">
+            <span class="app-sidebar-icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 20a6 6 0 0 0-12 0" />
+                <circle cx="12" cy="10" r="4" />
+                <circle cx="12" cy="12" r="10" />
+              </svg>
+            </span>
+            <span>Min bruker</span>
+          </a>
+        </li>
+
+        <% if (!currentUser) { %>
+          <li>
+            <a href="/logg-inn" class="app-sidebar-link">
+              <span class="app-sidebar-icon" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                  <polyline points="10 17 15 12 10 7" />
+                  <line x1="15" y1="12" x2="3" y2="12" />
+                </svg>
+              </span>
+              <span>Logg inn</span>
+            </a>
+          </li>
+        <% } else if (currentUser.isAdmin || currentUser.role === 'ADMIN') { %>
+          <li>
+            <a href="/admin/dashboard" class="app-sidebar-link">
+              <span class="app-sidebar-icon" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
+                  <path d="m9 12 2 2 4-4" />
+                </svg>
+              </span>
+              <span>Admin</span>
+            </a>
+          </li>
+        <% } %>
+      </ul>
+
+      <% if (currentUser) { %>
+        <div class="app-sidebar-account">
+          <div class="app-sidebar-account-row">
+            <div class="app-sidebar-avatar" aria-hidden="true"><%= sidebarInitial %></div>
+            <div>
+              <span class="app-sidebar-account-name"><%= currentUser.fullName %></span>
+              <span class="app-sidebar-account-email"><%= currentUser.email %></span>
+            </div>
+          </div>
+
+          <form action="/logg-ut" method="POST" class="app-sidebar-logout">
+            <button type="submit" class="btn btn-outline btn-sm">Logg ut</button>
+          </form>
+        </div>
+      <% } %>
+    </div>
+  </nav>
 </aside>

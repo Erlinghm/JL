@@ -5,6 +5,8 @@ const DEFAULT_LNG = 8.469;
 const DEFAULT_SOIL_TYPE = "Leirjord";
 const DEFAULT_SOIL_QUALITY = "God";
 const DEFAULT_SOIL_COMPOSITION = { leire: 35, sand: 25, silt: 30, organisk: 10 };
+const SCHEDULABLE_LISTING_STATUSES = ["PUBLISHED", "UPCOMING", "ACTIVE"];
+const CLOSED_LISTING_STATUSES = new Set(["DRAFT", "ENDED", "AWARDED", "CANCELLED"]);
 
 const listingInclude = {
   owner: { include: { profile: true } },
@@ -48,20 +50,38 @@ function sumArea(parcels = []) {
 }
 
 function listingStatusFromInput(status, auctionStartAt, auctionEndAt) {
+  let requestedStatus = null;
+
   if (status) {
     const raw = String(status).trim().toLowerCase();
-    if (raw === "draft" || raw === "utkast") return "DRAFT";
-    if (raw === "published" || raw === "publisert") return "PUBLISHED";
-    if (raw === "upcoming" || raw === "kommende") return "UPCOMING";
-    if (raw === "active" || raw === "aktiv") return "ACTIVE";
-    if (raw === "ended" || raw === "avsluttet") return "ENDED";
-    if (raw === "awarded" || raw === "tildelt") return "AWARDED";
-    if (raw === "cancelled" || raw === "kansellert") return "CANCELLED";
+    if (raw === "draft" || raw === "utkast") requestedStatus = "DRAFT";
+    if (raw === "published" || raw === "publisert") requestedStatus = "PUBLISHED";
+    if (raw === "upcoming" || raw === "kommende") requestedStatus = "UPCOMING";
+    if (raw === "active" || raw === "aktiv") requestedStatus = "ACTIVE";
+    if (raw === "ended" || raw === "avsluttet") requestedStatus = "ENDED";
+    if (raw === "awarded" || raw === "tildelt") requestedStatus = "AWARDED";
+    if (raw === "cancelled" || raw === "kansellert") requestedStatus = "CANCELLED";
+  }
+
+  if (requestedStatus && CLOSED_LISTING_STATUSES.has(requestedStatus)) {
+    return requestedStatus;
   }
 
   const now = new Date();
   if (auctionStartAt > now) return "UPCOMING";
   if (auctionEndAt <= now) return "ENDED";
+  return "ACTIVE";
+}
+
+function effectiveListingStatus(listing, now = new Date()) {
+  if (!listing) return null;
+  if (CLOSED_LISTING_STATUSES.has(listing.status)) return listing.status;
+
+  const auctionStartAt = new Date(listing.auctionStartAt);
+  const auctionEndAt = new Date(listing.auctionEndAt);
+
+  if (!Number.isNaN(auctionEndAt.getTime()) && auctionEndAt <= now) return "ENDED";
+  if (!Number.isNaN(auctionStartAt.getTime()) && auctionStartAt > now) return "UPCOMING";
   return "ACTIVE";
 }
 
@@ -82,6 +102,7 @@ function viewStatusFromListing(status) {
 function toView(listing) {
   if (!listing) return null;
 
+  const effectiveStatus = effectiveListingStatus(listing);
   const farm = listing.farm || {};
   const owner = farm.owner || listing.owner || {};
   const profile = owner.profile || {};
@@ -121,7 +142,7 @@ function toView(listing) {
     startingBid: listing.startingBidPerDekarYear,
     currentBid: listing.currentBidPerDekarYear,
     rentalPeriodYears: listing.rentalPeriodYears,
-    status: viewStatusFromListing(listing.status),
+    status: viewStatusFromListing(effectiveStatus),
     cropTypes: (farm.cropTypes || []).map((link) => link.cropType.name),
     bids,
     createdAt: listing.createdAt,
@@ -129,6 +150,35 @@ function toView(listing) {
 }
 
 function createFarmModel(prisma = defaultPrisma) {
+  async function syncAuctionStatuses(tx = prisma, now = new Date()) {
+    if (!tx.listing?.updateMany) return;
+
+    await tx.listing.updateMany({
+      where: {
+        status: { in: SCHEDULABLE_LISTING_STATUSES },
+        auctionEndAt: { lte: now },
+      },
+      data: { status: "ENDED" },
+    });
+
+    await tx.listing.updateMany({
+      where: {
+        status: { in: ["PUBLISHED", "UPCOMING"] },
+        auctionStartAt: { lte: now },
+        auctionEndAt: { gt: now },
+      },
+      data: { status: "ACTIVE" },
+    });
+
+    await tx.listing.updateMany({
+      where: {
+        status: { in: ["PUBLISHED", "ACTIVE"] },
+        auctionStartAt: { gt: now },
+      },
+      data: { status: "UPCOMING" },
+    });
+  }
+
   async function ensureShadowUser(tx, { fullName, role, county, bio, verificationType }) {
     const normalizedName = String(fullName || "Anonym").trim() || "Anonym";
     const email = `${slugify(normalizedName)}-${role.toLowerCase()}@jordleie.invalid`;
@@ -261,6 +311,8 @@ function createFarmModel(prisma = defaultPrisma) {
   }
 
   async function find(filter = {}) {
+    await syncAuctionStatuses();
+
     const where = {};
 
     if (filter.fylke) {
@@ -281,6 +333,8 @@ function createFarmModel(prisma = defaultPrisma) {
   }
 
   async function findById(id) {
+    await syncAuctionStatuses();
+
     const listing = await prisma.listing.findUnique({
       where: { id: parseInt(id, 10) },
       include: listingInclude,
@@ -556,6 +610,9 @@ function createFarmModel(prisma = defaultPrisma) {
     }
 
     await prisma.$transaction(async (tx) => {
+      const now = new Date();
+      await syncAuctionStatuses(tx, now);
+
       const listing = await tx.listing.findUnique({
         where: { id: listingId },
         include: {
@@ -569,6 +626,10 @@ function createFarmModel(prisma = defaultPrisma) {
 
       if (!listing) {
         throw new Error("Auksjonen finnes ikke.");
+      }
+
+      if (effectiveListingStatus(listing, now) !== "ACTIVE") {
+        throw new Error("Auksjonen er avsluttet og kan ikke motta flere bud.");
       }
 
       const minimumBid =
@@ -642,7 +703,7 @@ function createFarmModel(prisma = defaultPrisma) {
     }
   }
 
-  const model = { find, findById, create, update, deleteById, updateBid, deleteAll, insertMany, toView };
+  const model = { find, findById, create, update, deleteById, updateBid, deleteAll, insertMany, toView, syncAuctionStatuses };
 
   return model;
 }
@@ -652,3 +713,4 @@ const farmModel = createFarmModel();
 module.exports = farmModel;
 module.exports.createFarmModel = createFarmModel;
 module.exports.toView = toView;
+module.exports.effectiveListingStatus = effectiveListingStatus;
